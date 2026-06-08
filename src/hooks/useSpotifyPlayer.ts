@@ -130,16 +130,34 @@ export function useSpotifyPlayer(
           };
           setActiveTrack(mappedTrack);
 
-          // Find this track's index in the cassette
-          const idx = cassette?.tracks.findIndex(t => t.id === spotifyTrack.id || t.title === spotifyTrack.name) ?? 0;
-          setActiveTrackIndex(Math.max(0, idx));
+          // Find this track's absolute index in the cassette
+          const absoluteIdx = cassette?.tracks.findIndex(t => t.id === spotifyTrack.id || t.title === spotifyTrack.name) ?? -1;
+          
+          // Determine if this track belongs to the current side
+          const half = Math.ceil((cassette?.tracks.length || 0) / 2);
+          const isSideA = currentSide === 'A';
+          const validForCurrentSide = isSideA ? (absoluteIdx < half) : (absoluteIdx >= half);
 
-          // Update sideTime based on player position
+          if (absoluteIdx !== -1 && !validForCurrentSide) {
+             // The user skipped past the end of the current side!
+             // We should stop playback and set hasFinishedSide = true
+             playerRef.current?.pause();
+             setIsPlaying(false);
+             setHasFinishedSide(true);
+             setSideTime(sideDuration); // max out the visual progress
+             return; // Stop updating state for the wrong side
+          }
+
+          // If valid, calculate sideTime relative to the current side
           let accumulated = 0;
-          for (let i = 0; i < (idx < 0 ? 0 : idx); i++) {
+          const startIndex = isSideA ? 0 : half;
+          for (let i = startIndex; i < absoluteIdx; i++) {
             accumulated += cassette?.tracks[i]?.duration ?? 0;
           }
+          
+          setActiveTrackIndex(Math.max(0, absoluteIdx - startIndex));
           setSideTime(accumulated + positionSec);
+          setHasFinishedSide(false);
         }
 
         // Detect end of playlist context
