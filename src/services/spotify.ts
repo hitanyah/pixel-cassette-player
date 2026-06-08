@@ -26,8 +26,8 @@ const FALLBACK_PREVIEW_URLS = [
 
 // Helper to determine the redirect URI
 export function getRedirectUri(): string {
-  const origin = window.location.origin;
-  return origin.endsWith('/') ? origin : `${origin}/`;
+  const url = window.location.origin + window.location.pathname;
+  return url.endsWith('/') ? url : `${url}/`;
 }
 
 // PKCE Helpers
