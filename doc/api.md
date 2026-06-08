@@ -1,6 +1,6 @@
-# 🔌 API 與技術接口文檔 (API Documentation)
+# 🔌 API 與技術介面文件 (API Documentation)
 
-本文件說明專案所使用的外部 API、本地儲存格式 (LocalStorage Schema) 以及網頁音訊架構 (Web Audio Architecture)。
+本檔案說明專案所使用的外部 API、本地儲存格式 (LocalStorage Schema) 以及網頁音訊架構 (Web Audio Architecture)。
 
 ---
 
@@ -16,7 +16,7 @@ sequenceDiagram
     participant Spotify as Spotify 認證伺服器
     
     Client->>Client: 1. 產生 Code Verifier & SHA-256 Challenge
-    User->>Client: 2. 點擊「Connect」
+    User->>Client: 2. 點選「Connect」
     Client->>Spotify: 3. 帶 Challenge 跳轉至 /authorize
     Spotify->>User: 4. 要求使用者登入並授權
     User->>Spotify: 5. 同意授權
@@ -25,18 +25,18 @@ sequenceDiagram
     Spotify->>Client: 8. 回傳 Access Token
 ```
 
-### 關鍵接口參數：
+### 關鍵介面引數：
 
 #### A. 請求使用者授權碼 (Authorize Endpoint)
 * **網址**：`https://accounts.spotify.com/authorize`
 * **Method**：`GET`
-* **參數**：
+* **引數**：
   * `client_id`：使用者自訂的 Spotify App Client ID
   * `response_type`：`code`
   * `redirect_uri`：首頁網址（如 `http://localhost:5173`）
   * `code_challenge_method`：`S256`
   * `code_challenge`：Base64 網址編碼 of SHA-256 Hashed 驗證碼
-  * `scope`：`playlist-read-private playlist-read-collaborative streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state` (包含讀取歌單、串流播放、音訊狀態讀取與修改權限)
+  * `scope`：`playlist-read-private playlist-read-collaborative streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state` (包含讀取歌單、串流播放、音訊狀態讀取與修改許可權)
 
 #### B. 兌換 Access Token (Token Endpoint)
 * **網址**：`https://accounts.spotify.com/api/token`
@@ -53,11 +53,11 @@ sequenceDiagram
 
 ## 1.1 Spotify Web Playback SDK 播放控制
 
-本專案導入了 **Spotify Web Playback SDK**，於網頁直接建立一個名為 `Retro Cassette Player 🎵` 的虛擬喇叭裝置。
+本專案匯入了 **Spotify Web Playback SDK**，於網頁直接建立一個名為 `Retro Cassette Player 🎵` 的虛擬喇叭裝置。
 
 ### A. 裝置連線與初始化 (SDK Setup)
 * **CDN 引入**：`https://sdk.scdn.co/spotify-player.js`
-* **建立實例**：
+* **建立例項**：
   ```typescript
   const player = new window.Spotify.Player({
     name: 'Retro Cassette Player 🎵',
@@ -93,7 +93,7 @@ sequenceDiagram
 
 ## 2. Spotify 歌單抓取 API
 
-獲得 Token 後，前端可直接調用 Spotify API 來獲取特定歌單的內容。
+獲得 Token 後，前端可直接呼叫 Spotify API 來獲取特定歌單的內容。
 
 * **網址**：`https://api.spotify.com/v1/playlists/{playlist_id}`
 * **Method**：`GET`
@@ -125,7 +125,7 @@ sequenceDiagram
 
 ## 3. Web Audio API 音訊管線
 
-我們使用 `AudioContext` 將原生 `<audio>` 播放標籤與波形分析儀進行管線連接，實現即時的像素波形圖繪製：
+我們使用 `AudioContext` 將原生 `<audio>` 播放標籤與波形分析儀進行管線連線，實現即時的畫素波形圖繪製：
 
 ```text
  [ HTML5 Audio Element ] 
@@ -138,7 +138,7 @@ sequenceDiagram
          │
          ├──────────────────────┐
          ▼                      ▼
- [ BiquadFilterNode / Mute ]  [ Canvas (繪製像素頻譜) ]
+ [ BiquadFilterNode / Mute ]  [ Canvas (繪製畫素頻譜) ]
          │
          ▼
  [ AudioContext.destination (揚聲器) ]
@@ -148,7 +148,7 @@ sequenceDiagram
 
 ## 4. 本地儲存 Schema (LocalStorage Format)
 
-我們使用瀏覽器的 `localStorage` 來儲存 Client ID 以及使用者自訂的卡 Tapes 數據。
+我們使用瀏覽器的 `localStorage` 來儲存 Client ID 以及使用者自訂的卡 Tapes 資料。
 
 ### A. 卡帶列表鍵：`custom_cassettes`
 * **Value**：卡帶物件陣列的 JSON 字串 `Cassette[]`
