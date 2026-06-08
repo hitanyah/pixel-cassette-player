@@ -95,7 +95,9 @@ function App() {
     const tapeQuery = params.get('tape');
     if (tapeQuery) {
       try {
-        const decodedString = decodeURIComponent(escape(atob(tapeQuery)));
+        // Restore '+' signs if the browser or some chat app parsed them as spaces
+        const safeQuery = tapeQuery.replace(/ /g, '+');
+        const decodedString = decodeURIComponent(escape(atob(safeQuery)));
         const importedCassette = JSON.parse(decodedString) as Cassette;
         
         // Ensure it has a valid ID and isn't completely bogus

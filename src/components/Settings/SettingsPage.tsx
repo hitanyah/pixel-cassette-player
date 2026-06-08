@@ -568,7 +568,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                           onClick={() => {
                             const str = JSON.stringify(tape);
                             const encoded = btoa(unescape(encodeURIComponent(str)));
-                            const shareUrl = `${window.location.origin}${window.location.pathname}?tape=${encoded}`;
+                            const shareUrl = `${window.location.origin}${window.location.pathname}?tape=${encodeURIComponent(encoded)}`;
                             navigator.clipboard.writeText(shareUrl).then(() => {
                               alert(`「${tape.title}」的分享連結已複製！快去貼給朋友吧！`);
                             }).catch(err => {
