@@ -6,7 +6,7 @@ import { useSpotifyPlayer } from './hooks/useSpotifyPlayer';
 import { Walkman } from './components/Walkman/Walkman';
 import { CassetteRack } from './components/CassetteRack/CassetteRack';
 import { SettingsPage } from './components/Settings/SettingsPage';
-import { exchangeCodeForToken, getRedirectUri, getStoredToken } from './services/spotify';
+import { exchangeCodeForToken, getRedirectUri, getStoredToken, redirectToSpotifyAuth } from './services/spotify';
 
 function App() {
   const [page, setPage] = useState<'home' | 'settings'>('home');
@@ -93,6 +93,12 @@ function App() {
 
     // Handle incoming shared cassette
     const tapeQuery = params.get('tape');
+    const clientQuery = params.get('client_id');
+    
+    if (clientQuery) {
+      localStorage.setItem('spotify_client_id', clientQuery);
+    }
+
     if (tapeQuery) {
       try {
         // Restore '+' signs if the browser or some chat app parsed them as spaces
@@ -115,7 +121,15 @@ function App() {
           
           // Clear the URL parameter so it doesn't trigger again on refresh
           window.history.replaceState({}, document.title, window.location.pathname);
-          alert(`成功收到並匯入朋友分享的卡帶：「${importedCassette.title}」！`);
+          
+          if (importedCassette.isSpotifyPlaylist && clientQuery && !getStoredToken()) {
+            if (window.confirm(`成功收到卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否立即使用分享者的連線設定進行登入？`)) {
+              redirectToSpotifyAuth(clientQuery, getRedirectUri());
+              return;
+            }
+          } else {
+            alert(`成功收到並匯入朋友分享的卡帶：「${importedCassette.title}」！`);
+          }
         }
       } catch (err) {
         console.error('Failed to parse shared cassette:', err);

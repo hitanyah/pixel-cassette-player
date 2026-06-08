@@ -568,7 +568,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                           onClick={() => {
                             const str = JSON.stringify(tape);
                             const encoded = btoa(unescape(encodeURIComponent(str)));
-                            const shareUrl = `${window.location.origin}${window.location.pathname}?tape=${encodeURIComponent(encoded)}`;
+                            
+                            // Include client ID in the URL to make it seamless for friends
+                            let clientParam = '';
+                            if (tape.isSpotifyPlaylist) {
+                              const clientId = localStorage.getItem('spotify_client_id');
+                              if (clientId) {
+                                clientParam = `&client_id=${encodeURIComponent(clientId)}`;
+                              }
+                            }
+                            
+                            const shareUrl = `${window.location.origin}${window.location.pathname}?tape=${encodeURIComponent(encoded)}${clientParam}`;
                             navigator.clipboard.writeText(shareUrl).then(() => {
                               alert(`「${tape.title}」的分享連結已複製！快去貼給朋友吧！`);
                             }).catch(err => {
