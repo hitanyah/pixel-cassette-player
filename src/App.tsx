@@ -34,6 +34,15 @@ function App() {
   // spotifyToken is read from localStorage and refreshed on auth
   const [spotifyToken, setSpotifyToken] = useState<string | null>(() => getStoredToken());
 
+  const handleSpotifyAuthError = () => {
+    setSpotifyToken(null);
+    localStorage.removeItem('spotify_access_token');
+    localStorage.removeItem('spotify_token_expires_at');
+    localStorage.removeItem('spotify_refresh_token');
+    alert('Spotify 連線已過期或授權失效。請重新連線！');
+    setPage('settings');
+  };
+
   const localAudioEngine = useAudioPlayer(
     activeCassette?.isSpotifyPlaylist ? null : activeCassette,
     currentSide
@@ -41,7 +50,8 @@ function App() {
   const spotifyAudioEngine = useSpotifyPlayer(
     activeCassette?.isSpotifyPlaylist ? activeCassette : null,
     currentSide,
-    spotifyToken
+    spotifyToken,
+    handleSpotifyAuthError
   );
 
   // Route to the correct audio engine based on cassette type
@@ -173,6 +183,14 @@ function App() {
 
   // Cassette interaction events
   const handleSelectCassette = (cassette: Cassette) => {
+    // Check if selecting a Spotify cassette but token is expired/null
+    if (cassette.isSpotifyPlaylist && !getStoredToken()) {
+      if (window.confirm(`「${cassette.title}」是 Spotify 卡帶，但偵測到連線已過期或未登入。\n\n是否現在前往「卡帶工作室」重新連接 Spotify？`)) {
+        setPage('settings');
+        return;
+      }
+    }
+
     audioEngine.stop();
     setLidOpen(true); // Open deck
 

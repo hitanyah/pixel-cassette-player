@@ -52,7 +52,8 @@ interface SpotifyPlayerState {
 export function useSpotifyPlayer(
   cassette: Cassette | null,
   currentSide: 'A' | 'B',
-  token: string | null
+  token: string | null,
+  onAuthError?: () => void
 ): UseAudioPlayerReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
@@ -176,6 +177,7 @@ export function useSpotifyPlayer(
 
       player.addListener('authentication_error', ({ message }: { message: string }) => {
         console.error('[Spotify SDK] Auth error:', message);
+        onAuthError?.();
       });
 
       player.addListener('account_error', ({ message }: { message: string }) => {
@@ -252,6 +254,9 @@ export function useSpotifyPlayer(
       })
       .catch(err => {
         console.error('[Spotify SDK] Failed to start playback:', err);
+        if (err.message === 'UNAUTHORIZED') {
+          onAuthError?.();
+        }
       });
   }, [cassette?.id, currentSide, sdkReady]);
 
@@ -274,6 +279,12 @@ export function useSpotifyPlayer(
 
   // Action methods
   const play = () => {
+    if (!token) {
+      if (window.confirm('Spotify 連線已過期或未登入。是否現在前往「卡帶工作室」重新連接？')) {
+        onAuthError?.();
+      }
+      return;
+    }
     if (isDeckEmpty || !playerRef.current) return;
     if (!sdkReady) {
       alert('Spotify 播放器尚未就緒，請稍候再試！');
