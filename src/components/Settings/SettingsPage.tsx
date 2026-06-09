@@ -600,7 +600,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             setSharingId(tape.id);
                             
                             // 使用 gzip 壓縮卡帶 JSON，大幅縮短網址長度（縮短 60-80%）
-                            // v2. 前綴用於標識新版壓縮格式，向下相容舊版 base64 格式
                             const str = JSON.stringify(tape);
                             const gzipBase64 = await compressString(str);
                             const encoded = `v2.${gzipBase64}`;
@@ -615,37 +614,63 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             }
                             
                             const shareUrl = `${window.location.origin}${window.location.pathname}?tape=${encodeURIComponent(encoded)}${clientParam}`;
-                            
+                            const isLocal = isLocalOrPrivateUrl(window.location.href);
+
+                            // 複製工具：先用 Clipboard API，失敗則改用 execCommand（焦點失去時仍可用）
+                            const copyToClipboard = async (text: string): Promise<boolean> => {
+                              try {
+                                await navigator.clipboard.writeText(text);
+                                return true;
+                              } catch {
+                                // Fallback：建立隱藏的 textarea，使用 execCommand 複製
+                                try {
+                                  const ta = document.createElement('textarea');
+                                  ta.value = text;
+                                  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+                                  document.body.appendChild(ta);
+                                  ta.focus();
+                                  ta.select();
+                                  const ok = document.execCommand('copy');
+                                  document.body.removeChild(ta);
+                                  return ok;
+                                } catch {
+                                  return false;
+                                }
+                              }
+                            };
+
+                            // ★ 關鍵修正：先在使用者點擊的當下立刻複製壓縮長網址
+                            //   （瀏覽器要求 clipboard.writeText 必須在使用者操作時呼叫，
+                            //     等待 8 秒短網址超時後頁面焦點已失去，複製必定失敗）
+                            const copiedCompressed = await copyToClipboard(shareUrl);
+
                             let finalUrl = shareUrl;
                             let isShortened = false;
-                            const isLocal = isLocalOrPrivateUrl(window.location.href);
-                            
-                            if (isLocal) {
-                              // 本機或區域網路環境：公共短網址服務無法解析私有 IP，直接跳過
-                              console.info('[Share] 偵測到本機/區域網路環境，跳過短網址轉換');
-                            } else {
-                              // 公開部署環境：嘗試呼叫 is.gd 短網址服務
+
+                            if (!isLocal) {
+                              // 公開部署環境：嘗試在背景呼叫 is.gd 短網址服務
                               try {
                                 const shortUrl = await shortenUrl(shareUrl);
                                 finalUrl = shortUrl;
                                 isShortened = true;
+                                // 縮短成功：更新剪貼簿為短網址
+                                await copyToClipboard(shortUrl);
                               } catch (e) {
-                                console.warn('[Share] 短網址轉換失敗，改用壓縮長網址：', e);
+                                console.warn('[Share] 短網址轉換失敗，已使用壓縮長網址：', e);
                               }
+                            } else {
+                              console.info('[Share] 偵測到本機/區域網路環境，跳過短網址轉換');
                             }
-                            
-                            navigator.clipboard.writeText(finalUrl).then(() => {
-                              if (isShortened) {
-                                alert(`「${tape.title}」的分享短網址已複製！快去貼給朋友吧！\n\n短網址：${finalUrl}`);
-                              } else if (isLocal) {
-                                alert(`「${tape.title}」的分享連結已複製！\n\n(偵測到本機測試環境，不支援短網址。\n已複製精簡壓縮長網址，可用於線上分享。)`);
-                              } else {
-                                alert(`「${tape.title}」的分享連結已複製！\n\n(短網址服務暫時不可用，已複製高倍率壓縮長網址。)`);
-                              }
-                            }).catch(err => {
-                              console.error('Failed to copy', err);
+
+                            if (isShortened) {
+                              alert(`「${tape.title}」的分享短網址已複製！快去貼給朋友吧！\n\n短網址：${finalUrl}`);
+                            } else if (isLocal) {
+                              alert(`「${tape.title}」的分享連結已複製！\n\n(偵測到本機測試環境，不支援短網址。\n已複製精簡壓縮長網址，可用於線上分享。)`);
+                            } else if (copiedCompressed) {
+                              alert(`「${tape.title}」的分享連結已複製！\n\n(短網址服務不可用，已複製高倍率壓縮長網址。)`);
+                            } else {
                               prompt('請手動複製此連結：', finalUrl);
-                            });
+                            }
                             
                             setSharingId(null);
                           }}
