@@ -139,17 +139,24 @@ export async function startSpotifyPlayback(
   contextUri: string,   // e.g. 'spotify:playlist:XXXXXX'
   offsetIndex: number = 0
 ): Promise<void> {
+  const body: any = {
+    position_ms: 0
+  };
+
+  if (contextUri.startsWith('spotify:track:')) {
+    body.uris = [contextUri];
+  } else {
+    body.context_uri = contextUri;
+    body.offset = { position: offsetIndex };
+  }
+
   await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      context_uri: contextUri,
-      offset: { position: offsetIndex },
-      position_ms: 0
-    })
+    body: JSON.stringify(body)
   });
 }
 
@@ -258,7 +265,8 @@ export async function fetchSpotifyPlaylist(
       artist: albumArtist,
       tracks: tracks,
       isSpotifyPlaylist: true,
-      spotifyPlaylistId: data.id
+      spotifyPlaylistId: data.id,
+      spotifyUri: `spotify:album:${data.id}`
     };
   } else if (isTrack) {
     // Parse Track (Single) Structure
@@ -282,7 +290,8 @@ export async function fetchSpotifyPlaylist(
       artist: artistNames,
       tracks: [track],
       isSpotifyPlaylist: true,
-      spotifyPlaylistId: data.id
+      spotifyPlaylistId: data.id,
+      spotifyUri: `spotify:track:${data.id}`
     };
   } else {
     // Parse Playlist Structure
@@ -354,7 +363,8 @@ export async function fetchSpotifyPlaylist(
       artist: data.owner.display_name || 'Spotify User',
       tracks: tracks,
       isSpotifyPlaylist: true,
-      spotifyPlaylistId: data.id
+      spotifyPlaylistId: data.id,
+      spotifyUri: `spotify:playlist:${data.id}`
     };
   }
 }

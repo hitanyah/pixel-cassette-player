@@ -5,8 +5,7 @@ interface DisplayScreenProps {
   activeTrack: Track | null;
   sideTime: number;
   isPlaying: boolean;
-  isFF: boolean;
-  isREW: boolean;
+
   analyser: AnalyserNode | null;
   currentSide: 'A' | 'B';
   isSpotifyStream?: boolean;
@@ -17,8 +16,6 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
   activeTrack,
   sideTime,
   isPlaying,
-  isFF,
-  isREW,
   analyser,
   currentSide,
   isSpotifyStream = false,
@@ -52,18 +49,15 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
       ctx.fillStyle = '#030a05'; // very dark matrix green
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      if (analyser && isPlaying && !isFF && !isREW) {
+      if (analyser && isPlaying) {
         analyser.getByteFrequencyData(dataArray);
       } else {
         // Fallback or idle visualizer (mock data)
         for (let i = 0; i < bufferLength; i++) {
-          if (isPlaying && !isFF && !isREW) {
+          if (isPlaying) {
             // Dancing mock visualizer
             const offset = Date.now() * 0.005 + i * 0.5;
             dataArray[i] = Math.max(10, Math.sin(offset) * 80 + Math.random() * 50 + 80);
-          } else if (isFF || isREW) {
-            // Fast erratic bars for winding
-            dataArray[i] = Math.random() * 150 + 50;
           } else {
             // Flat idle line
             dataArray[i] = 4;
@@ -115,7 +109,7 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPlaying, isFF, isREW, analyser]);
+  }, [isPlaying, analyser]);
 
   return (
     <div 
@@ -143,7 +137,7 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
                   🎧 SPOTIFY
                 </span>
               )}
-              {isFF ? '▶▶ FF' : isREW ? '◀◀ REW' : isPlaying ? '▶ PLAY' : '■ STOP'}
+              {isPlaying ? '▶ PLAY' : '■ STOP'}
             </span>
           </div>
 

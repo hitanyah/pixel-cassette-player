@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Settings, HelpCircle } from 'lucide-react';
-import { Cassette } from './services/mockData';
+import { Cassette, DEFAULT_CASSETTES } from './services/mockData';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import { useSpotifyPlayer } from './hooks/useSpotifyPlayer';
 import { Walkman } from './components/Walkman/Walkman';
@@ -22,7 +22,7 @@ function App() {
   });
 
   // Combine default and custom cassettes
-  const allCassettes = customCassettes;
+  const allCassettes = [...DEFAULT_CASSETTES, ...customCassettes];
 
   // Currently loaded cassette
   const [activeCassette, setActiveCassette] = useState<Cassette | null>(() => {
@@ -241,7 +241,7 @@ function App() {
                   marginBottom: '10px'
                 }}
               >
-                ★ RETRO CASSETTE PLAYER ★
+                ★ POCKET WALKMAN ★
               </h1>
             </div>
 

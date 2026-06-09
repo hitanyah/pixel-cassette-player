@@ -44,7 +44,9 @@ body {
   /* Retro dotted background pattern (with reduced opacity for better text readability) */
   background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
   background-size: 16px 16px;
+  backdrop-filter: blur(20px);
 }
+
 
 /* Scrollbar Pixel Style */
 ::-webkit-scrollbar {

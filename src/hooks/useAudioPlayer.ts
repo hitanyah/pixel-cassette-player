@@ -3,8 +3,7 @@ import { Cassette, Track } from '../services/mockData';
 
 export interface UseAudioPlayerReturn {
   isPlaying: boolean;
-  isFF: boolean;
-  isREW: boolean;
+
   sideTime: number; // current position in seconds on this side
   sideDuration: number; // total duration of this side in seconds
   activeTrack: Track | null;
@@ -14,10 +13,8 @@ export interface UseAudioPlayerReturn {
   play: () => void;
   pause: () => void;
   stop: () => void;
-  startFF: () => void;
-  stopFF: () => void;
-  startREW: () => void;
-  stopREW: () => void;
+  nextTrack: () => void;
+  previousTrack: () => void;
   setVolume: (vol: number) => void;
   analyser: AnalyserNode | null;
   isDeckEmpty: boolean;
@@ -30,8 +27,7 @@ export function useAudioPlayer(
   currentSide: 'A' | 'B'
 ): UseAudioPlayerReturn {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFF, setIsFF] = useState(false);
-  const [isREW, setIsREW] = useState(false);
+
   const [sideTime, setSideTime] = useState(0);
   const [volume, setVolumeState] = useState(0.8);
   const [hasFinishedSide, setHasFinishedSide] = useState(false);
@@ -40,8 +36,9 @@ export function useAudioPlayer(
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const rewIntervalRef = useRef<number | null>(null);
+
   const progressIntervalRef = useRef<number | null>(null);
+  const currentTrackIdRef = useRef<string | null>(null);
 
   // Split tracks based on Side A or B
   const getSideTracks = (): Track[] => {
@@ -89,18 +86,21 @@ export function useAudioPlayer(
 
     // Handle track ended
     audio.onended = () => {
-      // If we are playing and there's more time left on the side, move forward
-      if (isPlaying && !isREW && !isFF) {
-        setSideTime((prev) => {
-          const nextTime = prev + 0.5; // push slightly forward to transition
-          if (nextTime >= sideDuration) {
-            setIsPlaying(false);
-            setHasFinishedSide(true);
-            return sideDuration;
+      setSideTime((prev) => {
+        const { index } = getTrackAtTime(prev);
+        if (index < sideTracks.length - 1) {
+          let accumulated = 0;
+          for (let i = 0; i <= index; i++) {
+            accumulated += sideTracks[i].duration;
           }
-          return nextTime;
-        });
-      }
+          if (audioRef.current) audioRef.current.currentTime = 0;
+          return accumulated;
+        } else {
+          setIsPlaying(false);
+          setHasFinishedSide(true);
+          return sideDuration;
+        }
+      });
     };
 
     return () => {
@@ -151,9 +151,8 @@ export function useAudioPlayer(
       return;
     }
 
-    const currentSrc = audioRef.current.src;
-    // If the track URL changed, load new source
-    if (currentSrc !== track.url) {
+    // If the track changed, load new source
+    if (currentTrackIdRef.current !== track.id) {
       if (track.isSpotifyPreview) {
         audioRef.current.crossOrigin = 'anonymous';
       } else {
@@ -161,6 +160,7 @@ export function useAudioPlayer(
       }
       audioRef.current.src = track.url;
       audioRef.current.load();
+      currentTrackIdRef.current = track.id;
     }
 
     // Adjust current track time (if difference is significant to avoid stuttering)
@@ -169,7 +169,7 @@ export function useAudioPlayer(
     }
 
     // Play if active
-    if (isPlaying && !isREW) {
+    if (isPlaying) {
       if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
         audioContextRef.current.resume();
       }
@@ -177,12 +177,12 @@ export function useAudioPlayer(
         console.warn("Audio autoplay blocked or failed:", err);
       });
     }
-  }, [sideTime, isPlaying, isREW]);
+  }, [sideTime, isPlaying]);
 
   // Sync play state
   useEffect(() => {
     if (!audioRef.current) return;
-    if (isPlaying && !isREW && !isFF) {
+    if (isPlaying) {
       audioRef.current.play().catch(() => {});
     } else {
       audioRef.current.pause();
@@ -194,11 +194,12 @@ export function useAudioPlayer(
     stop();
     setSideTime(0);
     setHasFinishedSide(false);
+    currentTrackIdRef.current = null;
   }, [cassette, currentSide]);
 
   // Track progress interval while playing normally
   useEffect(() => {
-    if (isPlaying && !isFF && !isREW) {
+    if (isPlaying) {
       progressIntervalRef.current = window.setInterval(() => {
         if (audioRef.current) {
           const { index } = getTrackAtTime(sideTime);
@@ -227,75 +228,7 @@ export function useAudioPlayer(
     return () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
-  }, [isPlaying, isFF, isREW, sideTracks, sideDuration]);
-
-  // Handle Fast Forward (FF)
-  // We use HTML5 playbackRate = 4.0 for a funny high-pitched sped-up sound!
-  useEffect(() => {
-    if (!audioRef.current) return;
-
-    if (isFF) {
-      initAudioContext();
-      if (audioContextRef.current) audioContextRef.current.resume();
-      
-      // Speed up play
-      audioRef.current.playbackRate = 4.0;
-      audioRef.current.play().catch(() => {});
-
-      // Custom fast update interval
-      progressIntervalRef.current = window.setInterval(() => {
-        setSideTime((prev) => {
-          const next = prev + 0.8; // Fast forward step
-          if (next >= sideDuration) {
-            stopFF();
-            setIsPlaying(false);
-            setHasFinishedSide(true);
-            return sideDuration;
-          }
-          return next;
-        });
-      }, 100);
-    } else {
-      audioRef.current.playbackRate = 1.0;
-      if (progressIntervalRef.current && !isPlaying) {
-        clearInterval(progressIntervalRef.current);
-      }
-    }
-
-    return () => {
-      if (progressIntervalRef.current && !isPlaying) clearInterval(progressIntervalRef.current);
-    };
-  }, [isFF]);
-
-  // Handle Rewind (REW)
-  // HTML5 audio doesn't support negative playbackRate, so we mute, play a simulated ticking, and decrement time.
-  useEffect(() => {
-    if (!audioRef.current) return;
-
-    if (isREW) {
-      audioRef.current.pause();
-      // Tick backward
-      rewIntervalRef.current = window.setInterval(() => {
-        setSideTime((prev) => {
-          const next = prev - 1.2; // Rewind step
-          if (next <= 0) {
-            stopREW();
-            return 0;
-          }
-          return next;
-        });
-      }, 100);
-    } else {
-      if (rewIntervalRef.current) {
-        clearInterval(rewIntervalRef.current);
-        rewIntervalRef.current = null;
-      }
-    }
-
-    return () => {
-      if (rewIntervalRef.current) clearInterval(rewIntervalRef.current);
-    };
-  }, [isREW]);
+  }, [isPlaying, sideTracks, sideDuration]);
 
   // Action methods
   const play = () => {
@@ -303,8 +236,6 @@ export function useAudioPlayer(
     initAudioContext();
     if (audioContextRef.current) audioContextRef.current.resume();
     setIsPlaying(true);
-    setIsFF(false);
-    setIsREW(false);
   };
 
   const pause = () => {
@@ -313,31 +244,56 @@ export function useAudioPlayer(
 
   const stop = () => {
     setIsPlaying(false);
-    setIsFF(false);
-    setIsREW(false);
     if (audioRef.current) {
       audioRef.current.pause();
     }
   };
 
-  const startFF = () => {
+  const applyJump = (newSideTime: number) => {
+    setSideTime(newSideTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+    }
+  };
+
+  const nextTrack = () => {
     if (isDeckEmpty) return;
-    setIsFF(true);
-    setIsREW(false);
+    const { index } = getTrackAtTime(sideTime);
+    if (index < sideTracks.length - 1) {
+      let accumulated = 0;
+      for (let i = 0; i <= index; i++) {
+        accumulated += sideTracks[i].duration;
+      }
+      applyJump(accumulated);
+      if (!isPlaying) play();
+    } else {
+      setSideTime(sideDuration);
+      setIsPlaying(false);
+      setHasFinishedSide(true);
+    }
   };
 
-  const stopFF = () => {
-    setIsFF(false);
-  };
-
-  const startREW = () => {
+  const previousTrack = () => {
     if (isDeckEmpty) return;
-    setIsREW(true);
-    setIsFF(false);
-  };
-
-  const stopREW = () => {
-    setIsREW(false);
+    const { index, offset } = getTrackAtTime(sideTime);
+    if (offset > 3) {
+      let accumulated = 0;
+      for (let i = 0; i < index; i++) {
+        accumulated += sideTracks[i].duration;
+      }
+      applyJump(accumulated);
+      if (!isPlaying) play();
+    } else if (index > 0) {
+      let accumulated = 0;
+      for (let i = 0; i < index - 1; i++) {
+        accumulated += sideTracks[i].duration;
+      }
+      applyJump(accumulated);
+      if (!isPlaying) play();
+    } else {
+      applyJump(0);
+      if (!isPlaying) play();
+    }
   };
 
   const setVolume = (vol: number) => {
@@ -351,8 +307,6 @@ export function useAudioPlayer(
 
   return {
     isPlaying,
-    isFF,
-    isREW,
     sideTime,
     sideDuration,
     activeTrack,
@@ -362,10 +316,8 @@ export function useAudioPlayer(
     play,
     pause,
     stop,
-    startFF,
-    stopFF,
-    startREW,
-    stopREW,
+    nextTrack,
+    previousTrack,
     setVolume,
     analyser: analyserRef.current,
     isDeckEmpty,

@@ -95,7 +95,7 @@ sequenceDiagram
 
 獲得 Token 後，前端可直接呼叫 Spotify API 來獲取特定歌單的內容。
 
-* **網址**：`https://api.spotify.com/v1/playlists/{playlist_id}`
+* **網址**：`https://api.spotify.com/v1/playlists/{id}` (歌單)、`/v1/albums/{id}` (專輯) 或 `/v1/tracks/{id}` (單曲)
 * **Method**：`GET`
 * **Headers**：
   * `Authorization`: `Bearer {access_token}`
@@ -163,6 +163,7 @@ interface Cassette {
   labelTextColor: string;  // 文字筆跡 HEX 色值
   isSpotifyPlaylist?: boolean;
   spotifyPlaylistId?: string;
+  spotifyUri?: string;     // Spotify 完整 URI (如 spotify:album:xxx)
   tracks: {
     id: string;
     title: string;

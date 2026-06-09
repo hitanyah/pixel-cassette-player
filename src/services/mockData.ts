@@ -18,6 +18,7 @@ export interface Cassette {
   labelTextColor: string;  // CSS color for font
   isSpotifyPlaylist?: boolean;
   spotifyPlaylistId?: string;
+  spotifyUri?: string; // Full URI e.g. spotify:album:xxx
 }
 
 // Visual options for user to customize cassettes
@@ -48,111 +49,48 @@ export const CASSETTE_STICKER_PATTERNS = [
 export const CASSETTE_TEXT_COLORS = [
   { name: '鉛筆黑 (Pencil Black)', value: '#1d1d1f' },
   { name: '原子筆藍 (Ink Blue)', value: '#1a2b7c' },
-  { name: '馬克筆紅 (Marker Red)', value: '#c72c2c' }
+  { name: '馬克筆紅 (Marker Red)', value: '#c72c2c' },
+  { name: '立可白 (Correction Fluid White)', value: '#f4f4f5' }
 ];
 
 // Pre-defined full-length cassette tapes
 export const DEFAULT_CASSETTES: Cassette[] = [
   {
-    id: 'default-vaporwave',
-    title: 'VAPORWAVE DREAM // 蒸氣夢境',
-    artist: 'Vapor Wave Club',
-    shellColor: '#ff007f', // Neon Pink
+    id: 'default-8bit',
+    title: '8-BIT ADVENTURE // 勇者鬥惡龍',
+    artist: 'Retro Gamer',
+    shellColor: '#39ff14', // Matrix Green
     stickerColor: '#ecebe4',
-    stickerPattern: 'stripes',
+    stickerPattern: 'grid',
     labelTextColor: '#1a2b7c',
     tracks: [
       {
-        id: 'vw-1',
-        title: 'SoundHelix Synth wave Vol. 1',
-        artist: 'Helix Club',
-        duration: 372,
-        url: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3'
+        id: '8bit-1',
+        title: 'Insert Coin',
+        artist: 'Retro Gamer',
+        duration: 19,
+        url: import.meta.env.BASE_URL + 'audio/8bit-1.mp3'
       },
       {
-        id: 'vw-2',
-        title: 'Liquid Electronic Dreams',
-        artist: 'Helix Club',
-        duration: 423,
-        url: 'https://cdn.freesound.org/previews/411/411089_5121236-lq.mp3'
+        id: '8bit-2',
+        title: 'Level 1: Green Hill',
+        artist: 'Retro Gamer',
+        duration: 36,
+        url: import.meta.env.BASE_URL + 'audio/8bit-2.mp3'
       },
       {
-        id: 'vw-3',
-        title: 'Cyber Sunset Boulevard',
-        artist: 'Helix Club',
-        duration: 302,
-        url: 'https://cdn.freesound.org/previews/320/320654_5260872-lq.mp3'
+        id: '8bit-3',
+        title: 'Boss Battle',
+        artist: 'Retro Gamer',
+        duration: 196,
+        url: import.meta.env.BASE_URL + 'audio/8bit-3.mp3'
       },
       {
-        id: 'vw-4',
-        title: 'Retro Digital Ocean Drive',
-        artist: 'Helix Club',
-        duration: 344,
-        url: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3'
-      }
-    ]
-  },
-  {
-    id: 'default-lofi',
-    title: 'LO-FI CHILL BEATS // 像素自習室',
-    artist: 'Lofi Chiller',
-    shellColor: '#4b4b4e', // Retro Gray
-    stickerColor: '#ff5e36', // Sunset Orange
-    stickerPattern: 'grid',
-    labelTextColor: '#1d1d1f',
-    tracks: [
-      {
-        id: 'lf-1',
-        title: 'Rainy Cafe Afternoon',
-        artist: 'Sound Helix',
-        duration: 344,
-        url: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3'
-      },
-      {
-        id: 'lf-2',
-        title: 'Late Night Coding',
-        artist: 'Sound Helix',
-        duration: 302,
-        url: 'https://cdn.freesound.org/previews/320/320654_5260872-lq.mp3'
-      },
-      {
-        id: 'lf-3',
-        title: 'Retro Arcade Coffee',
-        artist: 'Sound Helix',
-        duration: 401,
-        url: 'https://cdn.freesound.org/previews/411/411089_5121236-lq.mp3'
-      }
-    ]
-  },
-  {
-    id: 'default-arcade',
-    title: '8-BIT ARCADE CLASSICS // 像素冒險',
-    artist: 'Chiptune Hero',
-    shellColor: '#1a1a1c', // Matte Black
-    stickerColor: '#76e5b1', // Mint Green
-    stickerPattern: 'waves',
-    labelTextColor: '#c72c2c',
-    tracks: [
-      {
-        id: 'ac-1',
-        title: '8-Bit Synth Adventure',
-        artist: 'Sound Helix',
-        duration: 401,
-        url: 'https://cdn.freesound.org/previews/411/411089_5121236-lq.mp3'
-      },
-      {
-        id: 'ac-2',
-        title: 'Stage 2 Boss Fight',
-        artist: 'Sound Helix',
-        duration: 360,
-        url: 'https://cdn.freesound.org/previews/320/320654_5260872-lq.mp3'
-      },
-      {
-        id: 'ac-3',
-        title: 'Victory Lap Theme',
-        artist: 'Sound Helix',
-        duration: 372,
-        url: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3'
+        id: '8bit-4',
+        title: 'Stage Clear',
+        artist: 'Retro Gamer',
+        duration: 23,
+        url: import.meta.env.BASE_URL + 'audio/8bit-4.mp3'
       }
     ]
   }

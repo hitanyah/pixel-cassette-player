@@ -54,8 +54,6 @@ export function useSpotifyPlayer(
   token: string | null
 ): UseAudioPlayerReturn {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFF, setIsFF] = useState(false);
-  const [isREW, setIsREW] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
   const [hasFinishedSide, setHasFinishedSide] = useState(false);
   const [activeTrack, setActiveTrack] = useState<Track | null>(null);
@@ -204,7 +202,7 @@ export function useSpotifyPlayer(
 
   // Smooth progress interpolation while playing
   useEffect(() => {
-    if (isPlaying && !isFF && !isREW) {
+    if (isPlaying) {
       progressIntervalRef.current = window.setInterval(() => {
         const elapsed = (Date.now() - lastKnownTimestampRef.current) / 1000;
         const estimated = lastKnownPositionRef.current + elapsed;
@@ -228,7 +226,7 @@ export function useSpotifyPlayer(
     return () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
-  }, [isPlaying, isFF, isREW, sideDuration]);
+  }, [isPlaying, sideDuration]);
 
   // When a new Spotify cassette is loaded and SDK is ready, start playing
   useEffect(() => {
@@ -238,7 +236,7 @@ export function useSpotifyPlayer(
     setSideTime(0);
     setTrackPosition(0);
 
-    const contextUri = `spotify:playlist:${cassette.spotifyPlaylistId}`;
+    const contextUri = cassette.spotifyUri || `spotify:playlist:${cassette.spotifyPlaylistId}`;
     // Offset by side: Side B starts at the halfway point of the playlist
     const half = Math.ceil(cassette.tracks.length / 2);
     const startOffset = currentSide === 'B' ? half : 0;
@@ -251,8 +249,6 @@ export function useSpotifyPlayer(
         console.error('[Spotify SDK] Failed to start playback:', err);
       });
   }, [cassette?.id, currentSide, sdkReady]);
-
-  // Fast Forward / Rewind: Spotify uses skip next/previous track triggers directly on button press
 
   // Sync volume changes to the SDK
   useEffect(() => {
@@ -269,8 +265,6 @@ export function useSpotifyPlayer(
     setSideTime(0);
     setHasFinishedSide(false);
     setIsPlaying(false);
-    setIsFF(false);
-    setIsREW(false);
   }, [cassette?.id, currentSide]);
 
   // Action methods
@@ -280,8 +274,6 @@ export function useSpotifyPlayer(
       alert('Spotify 播放器尚未就緒，請稍候再試！');
       return;
     }
-    setIsFF(false);
-    setIsREW(false);
     playerRef.current.resume().then(() => setIsPlaying(true));
   };
 
@@ -292,14 +284,12 @@ export function useSpotifyPlayer(
 
   const stop = () => {
     setIsPlaying(false);
-    setIsFF(false);
-    setIsREW(false);
     if (playerRef.current) {
       playerRef.current.pause();
     }
   };
 
-  const startFF = () => {
+  const nextTrack = () => {
     if (isDeckEmpty || !playerRef.current) return;
     playerRef.current.nextTrack().then(() => {
       console.log('[Spotify SDK] Skipped to next track');
@@ -308,9 +298,7 @@ export function useSpotifyPlayer(
     });
   };
 
-  const stopFF = () => {};
-
-  const startREW = () => {
+  const previousTrack = () => {
     if (isDeckEmpty || !playerRef.current) return;
     playerRef.current.previousTrack().then(() => {
       console.log('[Spotify SDK] Skipped to previous track');
@@ -318,8 +306,6 @@ export function useSpotifyPlayer(
       console.error('[Spotify SDK] Failed to skip to previous track:', err);
     });
   };
-
-  const stopREW = () => {};
 
   const setVolume = (vol: number) => {
     setVolumeState(Math.max(0, Math.min(1, vol)));
@@ -331,8 +317,6 @@ export function useSpotifyPlayer(
 
   return {
     isPlaying,
-    isFF,
-    isREW,
     sideTime,
     sideDuration,
     activeTrack,
@@ -342,10 +326,8 @@ export function useSpotifyPlayer(
     play,
     pause,
     stop,
-    startFF,
-    stopFF,
-    startREW,
-    stopREW,
+    nextTrack,
+    previousTrack,
     setVolume,
     analyser: null,   // SDK uses its own audio pipeline, no Web Audio API access
     isDeckEmpty,

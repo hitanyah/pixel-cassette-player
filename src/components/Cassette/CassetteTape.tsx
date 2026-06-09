@@ -5,8 +5,6 @@ interface CassetteTapeProps {
   cassette: Cassette;
   side?: 'A' | 'B';
   isPlaying?: boolean;
-  isFF?: boolean;
-  isREW?: boolean;
   progress?: number; // 0 to 1 (representing sideTime / sideDuration)
   onClick?: () => void;
   size?: 'normal' | 'small' | 'rack';
@@ -16,8 +14,6 @@ export const CassetteTape: React.FC<CassetteTapeProps> = ({
   cassette,
   side = 'A',
   isPlaying = false,
-  isFF = false,
-  isREW = false,
   progress = 0,
   onClick,
   size = 'normal'
@@ -27,13 +23,11 @@ export const CassetteTape: React.FC<CassetteTapeProps> = ({
   // Calculate rotation speed class
   let reelAnimClass = '';
   if (isPlaying) {
-    if (isFF) reelAnimClass = 'spin-clockwise';
-    else if (isREW) reelAnimClass = 'spin-counter-clockwise';
-    else reelAnimClass = 'spin-clockwise';
+    reelAnimClass = 'spin-clockwise';
   }
 
   // Define dynamic spinning speeds (via inline styles)
-  const reelSpinSpeed = isFF || isREW ? '0.2s' : '2s';
+  const reelSpinSpeed = '2s';
 
   // Calculate tape winding thickness
   const baseTapeRadius = 14; // minimum tape radius when empty

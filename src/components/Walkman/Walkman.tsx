@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Square, FastForward, Rewind, RotateCcw, Volume2, Sparkles, SkipForward, SkipBack } from 'lucide-react';
 import { Cassette } from '../../services/mockData';
 import { UseAudioPlayerReturn } from '../../hooks/useAudioPlayer';
@@ -30,8 +30,6 @@ export const Walkman: React.FC<WalkmanProps> = ({
 }) => {
   const {
     isPlaying,
-    isFF,
-    isREW,
     sideTime,
     sideDuration,
     activeTrack,
@@ -39,10 +37,8 @@ export const Walkman: React.FC<WalkmanProps> = ({
     play,
     pause,
     stop,
-    startFF,
-    stopFF,
-    startREW,
-    stopREW,
+    nextTrack,
+    previousTrack,
     setVolume,
     analyser,
     isDeckEmpty,
@@ -50,29 +46,16 @@ export const Walkman: React.FC<WalkmanProps> = ({
   } = audioEngine;
 
   const [isFlipping, setIsFlipping] = useState(false);
+  const [isPausePressed, setIsPausePressed] = useState(false);
 
-  // Play click audio indicator
+  // Play click audio indicator (temporarily disabled)
   const playClickSound = () => {
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(120, audioCtx.currentTime); // low metallic thud
-      osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.09);
-    } catch (e) {
-      // AudioContext blocker
-    }
+    // Click sound feature reverted
   };
 
   const handlePlay = () => {
     playClickSound();
+    setIsPausePressed(false);
     if (isLidOpen) {
       // Close door automatically if user clicks play with cassette inside
       if (cassette) {
@@ -86,25 +69,32 @@ export const Walkman: React.FC<WalkmanProps> = ({
 
   const handlePause = () => {
     playClickSound();
-    pause();
+    if (isPausePressed) {
+      setIsPausePressed(false);
+      play();
+    } else {
+      setIsPausePressed(true);
+      pause();
+    }
   };
 
   const handleStop = () => {
     playClickSound();
+    setIsPausePressed(false);
     stop();
   };
 
-  const handleFF = () => {
+  const handlePrev = () => {
     playClickSound();
-    if (isFF) stopFF();
-    else startFF();
+    audioEngine.previousTrack();
   };
 
-  const handleREW = () => {
+  const handleNext = () => {
     playClickSound();
-    if (isREW) stopREW();
-    else startREW();
+    audioEngine.nextTrack();
   };
+
+
 
   const handleEject = () => {
     playClickSound();
@@ -182,11 +172,11 @@ export const Walkman: React.FC<WalkmanProps> = ({
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
             <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#a0a0ab' }}>PLAY</span>
-            <div className={`led green ${isPlaying && !isFF && !isREW ? 'on' : ''}`} />
+            <div className={`led green ${isPlaying ? 'on' : ''}`} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-            <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#a0a0ab' }}>WIND</span>
-            <div className={`led red ${isFF || isREW ? 'on' : ''}`} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#888', marginBottom: '4px' }}>BATT</span>
+            <div className={`led red`} />
           </div>
         </div>
       </div>
@@ -196,8 +186,6 @@ export const Walkman: React.FC<WalkmanProps> = ({
         activeTrack={activeTrack}
         sideTime={sideTime}
         isPlaying={isPlaying}
-        isFF={isFF}
-        isREW={isREW}
         analyser={analyser}
         currentSide={currentSide}
         isSpotifyStream={!!cassette?.isSpotifyPlaylist}
@@ -260,8 +248,6 @@ export const Walkman: React.FC<WalkmanProps> = ({
               cassette={cassette}
               side={currentSide}
               isPlaying={isPlaying}
-              isFF={isFF}
-              isREW={isREW}
               progress={progress}
               size="normal"
             />
@@ -413,7 +399,7 @@ export const Walkman: React.FC<WalkmanProps> = ({
       >
         <button 
           title="Play"
-          className={`walkman-btn ${isPlaying && !isFF && !isREW ? 'pressed' : ''}`}
+          className={`walkman-btn ${isPlaying ? 'pressed' : ''}`}
           onClick={handlePlay}
           disabled={isDeckEmpty}
         >
@@ -423,44 +409,34 @@ export const Walkman: React.FC<WalkmanProps> = ({
 
         <button 
           title="Pause"
-          className={`walkman-btn ${isPlaying && (isFF || isREW) ? '' : !isPlaying && sideTime > 0 && !hasFinishedSide ? 'pressed' : ''}`}
+          className={`walkman-btn ${isPausePressed && !hasFinishedSide && !isDeckEmpty ? 'pressed' : ''}`}
           onClick={handlePause}
-          disabled={isDeckEmpty || !isPlaying}
+          disabled={isDeckEmpty}
         >
           <Pause size={12} fill="#000" />
           <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>PAUSE</span>
         </button>
 
+        {/* PREV Button */}
         <button 
-          title={cassette?.isSpotifyPlaylist ? "Previous Track" : "Rewind"}
-          className={`walkman-btn ${isREW ? 'pressed' : ''}`}
-          onClick={handleREW}
+          className="walkman-btn"
           disabled={isDeckEmpty}
+          onClick={handlePrev}
+          title="Previous Track"
         >
-          {cassette?.isSpotifyPlaylist ? (
-            <SkipBack size={12} fill="#000" />
-          ) : (
-            <Rewind size={12} fill="#000" />
-          )}
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>
-            {cassette?.isSpotifyPlaylist ? 'PREV' : 'REW'}
-          </span>
+          <SkipBack size={12} fill="#000" />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>PREV</span>
         </button>
-
+        
+        {/* NEXT Button */}
         <button 
-          title={cassette?.isSpotifyPlaylist ? "Next Track" : "Fast Forward"}
-          className={`walkman-btn ${isFF ? 'pressed' : ''}`}
-          onClick={handleFF}
+          className="walkman-btn"
           disabled={isDeckEmpty}
+          onClick={handleNext}
+          title="Next Track"
         >
-          {cassette?.isSpotifyPlaylist ? (
-            <SkipForward size={12} fill="#000" />
-          ) : (
-            <FastForward size={12} fill="#000" />
-          )}
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>
-            {cassette?.isSpotifyPlaylist ? 'NEXT' : 'FF'}
-          </span>
+          <SkipForward size={12} fill="#000" />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>NEXT</span>
         </button>
 
         <button 
