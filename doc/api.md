@@ -156,7 +156,30 @@ sequenceDiagram
 
 ---
 
-## 4. 本地儲存 Schema (LocalStorage Format)
+## 5. 卡帶分享 URL 工具函數 (URL Sharing Utilities)
+
+定義於 [`spotify.ts`](file:///d:/project/pixel-cassette-player/src/services/spotify.ts)，負責將卡帶 JSON 壓縮為可分享的 URL-safe Base64 字串，以及反向解壓。
+
+### `compressString(input: string): Promise<string>`
+* **說明**：使用瀏覽器原生 `CompressionStream('gzip')` 壓縮 JSON 字串，並輸出 **URL-safe Base64**（`+`→`-`、`/`→`_`、去除 `=`），可縮短分享網址約 60~80%。
+* **輸出格式**：無 `+`、`/`、`=` 字元，可直接放入 URL 參數，無需再次 `encodeURIComponent`。
+
+### `decompressString(base64: string): Promise<string>`
+* **說明**：將 `compressString` 產生的 URL-safe Base64 字串解壓回原始 JSON 字串。
+* **相容性**：同時接受含 `+`/`/`/`=` 的舊版標準 Base64，維持向下相容。
+* **內部處理**：`-` → `+`、`_` → `/`，再補回 `=` 補位，最後以 `DecompressionStream('gzip')` 解壓。
+
+### URL 格式版本
+| 版本 | 格式 | 解碼方式 |
+|:---|:---|:---|
+| **v2（新版）** | `?tape=v2.{gzip_url_safe_base64}` | `decompressString` 非同步解壓 |
+| **v1（舊版）** | `?tape={standard_base64}` | `atob` + `decodeURIComponent` 同步解碼 |
+
+> `App.tsx` 載入時會自動判斷前綴，新舊連結皆可正確解析。
+
+---
+
+## 6. 本地儲存 Schema (LocalStorage Format)
 
 我們使用瀏覽器的 `localStorage` 來儲存 Client ID 以及使用者自訂的卡 Tapes 資料。
 

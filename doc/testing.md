@@ -48,7 +48,7 @@
 
 ## 4. 自動化單元測試 (Automated Unit Testing)
 
-為了確保核心資料結構與業務邏輯在迭代中不發生 Regression，專案編寫了 22 個自動化單元測試案例：
+為了確保核心資料結構與業務邏輯在迭代中不發生 Regression，專案編寫了 **32 個**自動化單元測試案例：
 
 ### 測試執行指令：
 ```bash
@@ -64,4 +64,5 @@ npm run test
 | 測試模組 | 測試檔案 | 測試用例內容 |
 |:---|:---|:---|
 | **音軌時間定位** | [audioHelpers.test.ts](file:///d:/project/pixel-cassette-player/src/utils/audioHelpers.test.ts) | • 驗證 0 秒時第一首歌起點<br>• 驗證第一首/第二首歌內部時間與偏移秒數計算<br>• 驗證歌曲邊界跨軌切換過渡點<br>• 驗證播放超出總時間時返回最後一首歌結尾點<br>• 空音軌之防禦性安全回傳值 |
-| **Spotify 機制** | [spotify.test.ts](file:///d:/project/pixel-cassette-player/src/services/spotify.test.ts) | • 驗證 PKCE OAuth 隨機字串生成長度與隨機性<br>• 驗證 `getRedirectUri` 的網址自動斜線補齊<br>• 驗證 Token 存在與過期本地清除邏輯<br>• 模擬 Fetch 回傳，驗證 `fetchSpotifyPlaylist` 支援單曲/專輯/歌單的 JSON 資料映射與轉換邏輯<br>• 驗證 `transferSpotifyPlayback` 裝置轉移之網址、標頭與 Body 引數正確性，以及 API 失敗異常拋出<br>• 模擬 DOM script 載入與全域回呼，驗證 `shortenUrl` JSONP 取得短網址成功/失敗超時退路邏輯 |
+| **Spotify 機制** | [spotify.test.ts](file:///d:/project/pixel-cassette-player/src/services/spotify.test.ts) | • 驗證 PKCE OAuth 隨機字串生成長度與隨機性<br>• 驗證 `getRedirectUri` 的網址自動斜線補齊<br>• 驗證 Token 存在與過期本地清除邏輯<br>• 模擬 Fetch 回傳，驗證 `fetchSpotifyPlaylist` 支援單曲/專輯/歌單的 JSON 資料映射與轉換邏輯<br>• 驗證 `transferSpotifyPlayback` 裝置轉移之網址、標頭與 Body 引數正確性，以及 API 失敗異常拋出<br>• 驗證 `shortenUrl` 已停用，呼叫後應立即 reject<br>• 驗證 `compressString` + `decompressString` 壓縮/解壓 Round-trip 完整還原原始字串<br>• 驗證壓縮後字串經 URL encode 後仍可被正確解壓<br>• 驗證損壞 Base64 字串解壓時丟出異常<br>• 驗證 `isLocalOrPrivateUrl` 正確識別 `localhost`、`127.0.0.1`、`192.168.x.x`、`10.x.x.x`、`172.16-31.x.x` 等私有位址<br>• 驗證 GitHub Pages 等公開域名不被識別為本機 |
+
