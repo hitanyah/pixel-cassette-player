@@ -400,56 +400,20 @@ export async function fetchSpotifyPlaylist(
 }
 
 /**
- * 使用 JSONP 方式呼叫 is.gd 服務產生短網址（繞過瀏覽器 CORS 限制）
+ * URL 短網址縮短（已移除）。
+ * is.gd 等公共短網址服務的防垃圾過濾器會主動拒絕含有 Base64 字串的 URL，
+ * 因此改用 URL-safe Base64 gzip 壓縮直接分享，網址已足夠精簡。
+ * @deprecated - 保留介面供測試向下相容，實際不再呼叫
  */
-export function shortenUrl(longUrl: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const callbackName = `jsonp_shorten_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    
-    // 建立 script 標籤
-    const script = document.createElement('script');
-    script.src = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}&callback=${callbackName}`;
-    script.id = callbackName;
-    
-    const cleanup = () => {
-      delete (window as any)[callbackName];
-      const el = document.getElementById(callbackName);
-      if (el) el.remove();
-    };
-
-    // 8秒後超時
-    const timeoutId = setTimeout(() => {
-      cleanup();
-      reject(new Error('短網址服務超時'));
-    }, 8000);
-
-    // 全域回呼函數
-    (window as any)[callbackName] = (data: any) => {
-      clearTimeout(timeoutId);
-      cleanup();
-      if (data && data.shorturl) {
-        resolve(data.shorturl);
-      } else if (data && data.errormessage) {
-        reject(new Error(data.errormessage));
-      } else {
-        reject(new Error('無法解析短網址'));
-      }
-    };
-
-    script.onerror = () => {
-      clearTimeout(timeoutId);
-      cleanup();
-      reject(new Error('網路連線失敗'));
-    };
-
-    document.body.appendChild(script);
-  });
+export function shortenUrl(_longUrl: string): Promise<string> {
+  return Promise.reject(new Error('短網址服務已停用'));
 }
 
 /**
  * 使用瀏覽器原生 CompressionStream (gzip) 壓縮字串，
- * 並將壓縮結果轉為 Base64 字串（帶 URL-safe 字元替換）。
- * 這能讓卡帶分享網址縮短 60~80%。
+ * 輸出 **URL-safe Base64**（`+`→`-`，`/`→`_`，去除 `=` 補位）。
+ * URL-safe 格式不含需要編碼的特殊字元，避免網址中出現 %2B/%2F/%3D，
+ * 使分享網址更短、更乾淨、不易被反垃圾過濾器攔截。
  */
 export async function compressString(input: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -468,7 +432,6 @@ export async function compressString(input: string): Promise<string> {
     compressedChunks.push(value);
   }
 
-  // Concatenate chunks into a single Uint8Array
   const totalLen = compressedChunks.reduce((acc, c) => acc + c.length, 0);
   const combined = new Uint8Array(totalLen);
   let offset = 0;
@@ -477,21 +440,31 @@ export async function compressString(input: string): Promise<string> {
     offset += chunk.length;
   }
 
-  // Convert to Base64
   let binary = '';
   for (let i = 0; i < combined.length; i++) {
     binary += String.fromCharCode(combined[i]);
   }
-  return btoa(binary);
+
+  // URL-safe Base64：替換 +/= 為 URL 安全字元，不需 encodeURIComponent
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 /**
- * 將 compressString 產生的 Base64 字串解壓回原始字串。
+ * 將 compressString 產生的 URL-safe Base64 字串解壓回原始字串。
+ * 同時相容舊版標準 Base64（含 +/= 字元）以維持向下相容性。
  * 使用瀏覽器原生 DecompressionStream (gzip)。
  */
 export async function decompressString(base64: string): Promise<string> {
-  // Decode Base64 back to binary
-  const binary = atob(base64);
+  // 將 URL-safe Base64 還原為標準 Base64（再補回 = 補位）
+  const standardBase64 = base64
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const padded = standardBase64 + '='.repeat((4 - standardBase64.length % 4) % 4);
+
+  const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);

@@ -7,7 +7,7 @@ import {
   CASSETTE_STICKER_PATTERNS, 
   CASSETTE_TEXT_COLORS 
 } from '../../services/mockData';
-import { redirectToSpotifyAuth, fetchSpotifyPlaylist, getStoredToken, getRedirectUri, shortenUrl, compressString, isLocalOrPrivateUrl } from '../../services/spotify';
+import { redirectToSpotifyAuth, fetchSpotifyPlaylist, getStoredToken, getRedirectUri, compressString } from '../../services/spotify';
 import { CassetteTape } from '../Cassette/CassetteTape';
 
 interface SettingsPageProps {
@@ -614,7 +614,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             }
                             
                             const shareUrl = `${window.location.origin}${window.location.pathname}?tape=${encodeURIComponent(encoded)}${clientParam}`;
-                            const isLocal = isLocalOrPrivateUrl(window.location.href);
 
                             // 複製工具：先用 Clipboard API，失敗則改用 execCommand（焦點失去時仍可用）
                             const copyToClipboard = async (text: string): Promise<boolean> => {
@@ -639,37 +638,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                               }
                             };
 
-                            // ★ 關鍵修正：先在使用者點擊的當下立刻複製壓縮長網址
-                            //   （瀏覽器要求 clipboard.writeText 必須在使用者操作時呼叫，
-                            //     等待 8 秒短網址超時後頁面焦點已失去，複製必定失敗）
-                            const copiedCompressed = await copyToClipboard(shareUrl);
+                            // 立即複製壓縮網址（gzip + URL-safe Base64，無任何 %2B/%2F 編碼污染）
+                            const copied = await copyToClipboard(shareUrl);
 
-                            let finalUrl = shareUrl;
-                            let isShortened = false;
-
-                            if (!isLocal) {
-                              // 公開部署環境：嘗試在背景呼叫 is.gd 短網址服務
-                              try {
-                                const shortUrl = await shortenUrl(shareUrl);
-                                finalUrl = shortUrl;
-                                isShortened = true;
-                                // 縮短成功：更新剪貼簿為短網址
-                                await copyToClipboard(shortUrl);
-                              } catch (e) {
-                                console.warn('[Share] 短網址轉換失敗，已使用壓縮長網址：', e);
-                              }
+                            if (copied) {
+                              alert(`「${tape.title}」的分享連結已複製！\n快去貼給朋友吧！`);
                             } else {
-                              console.info('[Share] 偵測到本機/區域網路環境，跳過短網址轉換');
-                            }
-
-                            if (isShortened) {
-                              alert(`「${tape.title}」的分享短網址已複製！快去貼給朋友吧！\n\n短網址：${finalUrl}`);
-                            } else if (isLocal) {
-                              alert(`「${tape.title}」的分享連結已複製！\n\n(偵測到本機測試環境，不支援短網址。\n已複製精簡壓縮長網址，可用於線上分享。)`);
-                            } else if (copiedCompressed) {
-                              alert(`「${tape.title}」的分享連結已複製！\n\n(短網址服務不可用，已複製高倍率壓縮長網址。)`);
-                            } else {
-                              prompt('請手動複製此連結：', finalUrl);
+                              prompt('請手動複製此連結：', shareUrl);
                             }
                             
                             setSharingId(null);

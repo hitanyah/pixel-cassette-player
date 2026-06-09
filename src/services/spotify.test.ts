@@ -244,50 +244,11 @@ describe('fetchSpotifyPlaylist API 映射測試', () => {
     });
   });
 
-  describe('shortenUrl JSONP', () => {
-    it('應正確藉由 JSONP 取得短網址', async () => {
-      const longUrl = 'https://example.com/very-long-url';
-      const mockShortUrl = 'https://is.gd/mockShort';
-
-      const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
-        const scriptNode = node as HTMLScriptElement;
-        const urlObj = new URL(scriptNode.src);
-        const callbackName = urlObj.searchParams.get('callback');
-        
-        if (callbackName && (window as any)[callbackName]) {
-          setTimeout(() => {
-            (window as any)[callbackName]({ shorturl: mockShortUrl });
-          }, 10);
-        }
-        return node;
-      });
-
-      const res = await shortenUrl(longUrl);
-      expect(res).toBe(mockShortUrl);
-      
-      appendChildSpy.mockRestore();
-    });
-
-    it('當 is.gd API 回傳錯誤訊息時應丟出異常', async () => {
-      const longUrl = 'https://example.com/invalid';
-      const mockError = 'Error: URL is invalid';
-
-      const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
-        const scriptNode = node as HTMLScriptElement;
-        const urlObj = new URL(scriptNode.src);
-        const callbackName = urlObj.searchParams.get('callback');
-        
-        if (callbackName && (window as any)[callbackName]) {
-          setTimeout(() => {
-            (window as any)[callbackName]({ errormessage: mockError });
-          }, 10);
-        }
-        return node;
-      });
-
-      await expect(shortenUrl(longUrl)).rejects.toThrow(mockError);
-      
-      appendChildSpy.mockRestore();
+  describe('shortenUrl（已停用）', () => {
+    it('應立即 reject，短網址功能已移除', async () => {
+      // shortenUrl 已停用（is.gd 主動拒絕含 Base64 的 URL），
+      // 呼叫後應立即回傳 reject，不應嘗試 JSONP 請求
+      await expect(shortenUrl('https://example.com/any-url')).rejects.toThrow('短網址服務已停用');
     });
   });
 
