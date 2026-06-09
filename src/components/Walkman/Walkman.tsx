@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Square, FastForward, Rewind, RotateCcw, Volume2, Sparkles, SkipForward, SkipBack } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Pause, Square, RotateCcw, Volume2, Sparkles, SkipForward, SkipBack } from 'lucide-react';
 import { Cassette } from '../../services/mockData';
 import { UseAudioPlayerReturn } from '../../hooks/useAudioPlayer';
 import { DisplayScreen } from './DisplayScreen';
@@ -37,8 +37,6 @@ export const Walkman: React.FC<WalkmanProps> = ({
     play,
     pause,
     stop,
-    nextTrack,
-    previousTrack,
     setVolume,
     analyser,
     isDeckEmpty,
