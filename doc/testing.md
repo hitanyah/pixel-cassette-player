@@ -43,3 +43,25 @@
 * **原因**：現代瀏覽器安全性原則禁止網頁在使用者「與頁面進行首次互動」前自動播放聲音，並且在使用者點選前，音訊內容 `AudioContext` 會被強制設為 `suspended` (掛起) 狀態。
 * **專案的應對設計**：
   * 我們在使用者點選 `PLAY` 按鈕、`FF`、`REW` 時，會明確且主動地呼叫 `audioContext.resume()`。由於此為使用者明確的點選互動 (Click Action)，瀏覽器會百分之百許可，並順暢開啟聲音管線。
+
+---
+
+## 4. 自動化單元測試 (Automated Unit Testing)
+
+為了確保核心資料結構與業務邏輯在迭代中不發生 Regression，專案編寫了 22 個自動化單元測試案例：
+
+### 測試執行指令：
+```bash
+# 執行單次測試 (Single Run)
+npm run test:run
+
+# 監聽檔案變更測試 (Watch Mode)
+npm run test
+```
+
+### 測試覆蓋範圍與檔案對應：
+
+| 測試模組 | 測試檔案 | 測試用例內容 |
+|:---|:---|:---|
+| **音軌時間定位** | [audioHelpers.test.ts](file:///d:/project/pixel-cassette-player/src/utils/audioHelpers.test.ts) | • 驗證 0 秒時第一首歌起點<br>• 驗證第一首/第二首歌內部時間與偏移秒數計算<br>• 驗證歌曲邊界跨軌切換過渡點<br>• 驗證播放超出總時間時返回最後一首歌結尾點<br>• 空音軌之防禦性安全回傳值 |
+| **Spotify 機制** | [spotify.test.ts](file:///d:/project/pixel-cassette-player/src/services/spotify.test.ts) | • 驗證 PKCE OAuth 隨機字串生成長度與隨機性<br>• 驗證 `getRedirectUri` 的網址自動斜線補齊<br>• 驗證 Token 存在與過期本地清除邏輯<br>• 模擬 Fetch 回傳，驗證 `fetchSpotifyPlaylist` 支援單曲/專輯/歌單的 JSON 資料映射與轉換邏輯<br>• 驗證 `transferSpotifyPlayback` 裝置轉移之網址、標頭與 Body 引數正確性，以及 API 失敗異常拋出<br>• 模擬 DOM script 載入與全域回呼，驗證 `shortenUrl` JSONP 取得短網址成功/失敗超時退路邏輯 |

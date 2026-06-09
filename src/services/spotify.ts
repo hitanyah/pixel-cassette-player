@@ -132,6 +132,29 @@ export function getStoredToken(): string | null {
 
 // ─── Spotify Web Playback API Controls ────────────────────────────────────────
 
+/** Transfer playback to a specific device */
+export async function transferSpotifyPlayback(
+  token: string,
+  deviceId: string,
+  play: boolean = false
+): Promise<void> {
+  const response = await fetch('https://api.spotify.com/v1/me/player', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      device_ids: [deviceId],
+      play: play
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to transfer Spotify playback');
+  }
+}
+
 /** Start or resume playback on a specific device */
 export async function startSpotifyPlayback(
   token: string,
@@ -150,7 +173,7 @@ export async function startSpotifyPlayback(
     body.offset = { position: offsetIndex };
   }
 
-  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+  const response = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -158,6 +181,10 @@ export async function startSpotifyPlayback(
     },
     body: JSON.stringify(body)
   });
+
+  if (!response.ok) {
+    throw new Error('Failed to start Spotify playback');
+  }
 }
 
 /** Pause playback */
@@ -367,4 +394,51 @@ export async function fetchSpotifyPlaylist(
       spotifyUri: `spotify:playlist:${data.id}`
     };
   }
+}
+
+/**
+ * 使用 JSONP 方式呼叫 is.gd 服務產生短網址（繞過瀏覽器 CORS 限制）
+ */
+export function shortenUrl(longUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const callbackName = `jsonp_shorten_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    
+    // 建立 script 標籤
+    const script = document.createElement('script');
+    script.src = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}&callback=${callbackName}`;
+    script.id = callbackName;
+    
+    const cleanup = () => {
+      delete (window as any)[callbackName];
+      const el = document.getElementById(callbackName);
+      if (el) el.remove();
+    };
+
+    // 8秒後超時
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error('短網址服務超時'));
+    }, 8000);
+
+    // 全域回呼函數
+    (window as any)[callbackName] = (data: any) => {
+      clearTimeout(timeoutId);
+      cleanup();
+      if (data && data.shorturl) {
+        resolve(data.shorturl);
+      } else if (data && data.errormessage) {
+        reject(new Error(data.errormessage));
+      } else {
+        reject(new Error('無法解析短網址'));
+      }
+    };
+
+    script.onerror = () => {
+      clearTimeout(timeoutId);
+      cleanup();
+      reject(new Error('網路連線失敗'));
+    };
+
+    document.body.appendChild(script);
+  });
 }

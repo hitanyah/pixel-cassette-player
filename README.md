@@ -92,13 +92,39 @@ pixel-cassette-player/
 │   │   └── Settings/
 │   │       └── SettingsPage.tsx      # 自訂卡帶配色與 Spotify 串接後臺
 │   ├── hooks/
-│   │   └── useAudioPlayer.ts         # 基於 Web Audio API 封裝的播放引擎
+│   │   ├── useAudioPlayer.ts         # 基於 Web Audio API 封裝的播放引擎
+│   │   └── useSpotifyPlayer.ts       # 基於 Spotify Web Playback SDK 的播放引擎
 │   ├── services/
 │   │   ├── mockData.ts               # 卡帶自訂選項定義與免版權 Lofi 音訊
-│   │   └── spotify.ts                # Spotify PKCE 授權流程與 API 抓取
+│   │   ├── spotify.ts                # Spotify PKCE 授權流程與 API 抓取
+│   │   └── spotify.test.ts           # Spotify API 映射與工具函數單元測試
+│   ├── utils/
+│   │   ├── audioHelpers.ts           # 播放時間落點計算純函數
+│   │   └── audioHelpers.test.ts      # 音訊輔助函數單元測試
 │   ├── App.tsx                       # 頁面路由器與全域狀態管理
 │   ├── index.css                     # 核心 CSS 設計系統 (畫素邊框、CRT Scanlines)
 │   └── main.tsx                      # 專案進入點
+├── vitest.config.ts        # Vitest 設定檔 (整合 Vite 並啟用 JSDOM)
 ├── tsconfig.json
 └── vite.config.ts
 ```
+
+---
+
+## 🧪 自動化單元測試 (Unit Testing)
+
+專案配置了自動化單元測試以保護核心播放器邏輯與 API 資料處理，防止後續修改或功能擴充造成功能退化。
+
+* **測試工具**：**Vitest**（測試執行器） + **JSDOM**（瀏覽器 API 模擬）。
+* **測試範圍**：
+  * 卡帶面總長度切換與音軌定位邏輯（`audioHelpers.ts`）。
+  * Spotify 網址解析 Regex、Redirect URI 計算、Token 逾期清理與隨機金鑰長度（`spotify.ts`）。
+* **指令**：
+  ```bash
+  # 1. 啟動監聽模式 (Watch Mode)
+  npm run test
+  
+  # 2. 執行單次測試並產出報告
+  npm run test:run
+  ```
+

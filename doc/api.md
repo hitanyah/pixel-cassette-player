@@ -89,6 +89,17 @@ sequenceDiagram
    - **下一首**：呼叫 SDK `player.nextTrack()` 方法 (對應 `POST /v1/me/player/next`)
    - **上一首**：呼叫 SDK `player.previousTrack()` 方法 (對應 `POST /v1/me/player/previous`)
 
+4. **轉移播放裝置 (Transfer Playback)**
+   - **網址**：`PUT https://api.spotify.com/v1/me/player`
+   - **Body (JSON)**：
+     ```json
+     {
+       "device_ids": ["{device_id}"],
+       "play": false
+     }
+     ```
+   - *註：當 SDK 連線成功觸發 ready 時呼叫，將使用者的活動會話鎖定於本瀏覽器裝置。*
+
 ---
 
 ## 2. Spotify 歌單抓取 API
@@ -125,7 +136,7 @@ sequenceDiagram
 
 ## 3. Web Audio API 音訊管線
 
-我們使用 `AudioContext` 將原生 `<audio>` 播放標籤與波形分析儀進行管線連線，實現即時的畫素波形圖繪製：
+我們使用 `AudioContext` 將原生 `<audio>` 播放標籤、波形分析儀與音量控制增益器進行連線，繞過行動端音量調節限制，並實現即時的畫素波形圖繪製：
 
 ```text
  [ HTML5 Audio Element ] 
@@ -134,11 +145,10 @@ sequenceDiagram
  [ MediaElementAudioSourceNode ] 
          │
          ▼
- [ AnalyserNode (FFT Size = 64) ] 
+ [ AnalyserNode (FFT Size = 64) ] ───► [ Canvas (繪製畫素頻譜) ]
          │
-         ├──────────────────────┐
-         ▼                      ▼
- [ BiquadFilterNode / Mute ]  [ Canvas (繪製畫素頻譜) ]
+         ▼
+ [ GainNode (音量控制增益器) ] 
          │
          ▼
  [ AudioContext.destination (揚聲器) ]

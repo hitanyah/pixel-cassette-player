@@ -7,7 +7,7 @@ import {
   CASSETTE_STICKER_PATTERNS, 
   CASSETTE_TEXT_COLORS 
 } from '../../services/mockData';
-import { redirectToSpotifyAuth, fetchSpotifyPlaylist, getStoredToken, getRedirectUri } from '../../services/spotify';
+import { redirectToSpotifyAuth, fetchSpotifyPlaylist, getStoredToken, getRedirectUri, shortenUrl } from '../../services/spotify';
 import { CassetteTape } from '../Cassette/CassetteTape';
 
 interface SettingsPageProps {
@@ -15,13 +15,15 @@ interface SettingsPageProps {
   cassettes: Cassette[];
   onAddCassette: (cassette: Cassette) => void;
   onDeleteCassette: (id: string) => void;
+  onClearAllCassettes: () => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   onBack,
   cassettes,
   onAddCassette,
-  onDeleteCassette
+  onDeleteCassette,
+  onClearAllCassettes
 }) => {
   // Spotify Integration States
   const [clientId, setClientId] = useState(() => localStorage.getItem('spotify_client_id') || '');
@@ -39,6 +41,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   // Loading/Error states
   const [isLoading, setIsLoading] = useState(false);
+  const [sharingId, setSharingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -528,18 +531,45 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
           {/* User Added Cassettes Rack List */}
           <div className="pixel-box-outset" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div className="font-pixel" style={{ fontSize: '11px', color: '#a0a0ab', borderBottom: '2px solid #000', paddingBottom: '6px' }}>
-              MY COLLECTION // 我新增的卡帶
+            <div 
+              style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                borderBottom: '2px solid #000', 
+                paddingBottom: '6px' 
+              }}
+            >
+              <div className="font-pixel" style={{ fontSize: '11px', color: '#a0a0ab' }}>
+                MY COLLECTION // 我新增的卡帶
+              </div>
+              {cassettes.filter(c => !c.id.startsWith('default-')).length > 0 && (
+                <button
+                  type="button"
+                  className="pixel-btn"
+                  onClick={onClearAllCassettes}
+                  style={{
+                    backgroundColor: '#ff3b30',
+                    color: '#fff',
+                    padding: '2px 8px',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    boxShadow: 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #ff8888, 0 0 0 2px #000'
+                  }}
+                >
+                  一鍵清空 (CLEAR ALL)
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
-              {cassettes.filter(c => c.id.startsWith('spotify-') || c.id.startsWith('custom-')).length === 0 ? (
+              {cassettes.filter(c => !c.id.startsWith('default-')).length === 0 ? (
                 <div className="font-pixel" style={{ fontSize: '8px', color: '#a0a0ab', textAlign: 'center', padding: '16px 0' }}>
                   目前尚無自訂卡帶 (預設內建卡帶不顯示於此)
                 </div>
               ) : (
                 cassettes
-                  .filter(c => c.id.startsWith('spotify-') || c.id.startsWith('custom-'))
+                  .filter(c => !c.id.startsWith('default-'))
                   .map((tape) => (
                     <div 
                       key={tape.id}
@@ -565,7 +595,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button 
                           className="pixel-btn" 
-                          onClick={() => {
+                          onClick={async () => {
+                            if (sharingId) return;
+                            setSharingId(tape.id);
+                            
                             const str = JSON.stringify(tape);
                             const encoded = btoa(unescape(encodeURIComponent(str)));
                             
@@ -579,22 +612,47 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             }
                             
                             const shareUrl = `${window.location.origin}${window.location.pathname}?tape=${encodeURIComponent(encoded)}${clientParam}`;
-                            navigator.clipboard.writeText(shareUrl).then(() => {
-                              alert(`「${tape.title}」的分享連結已複製！快去貼給朋友吧！`);
+                            
+                            let finalUrl = shareUrl;
+                            let isShortened = false;
+                            
+                            try {
+                              const shortUrl = await shortenUrl(shareUrl);
+                              finalUrl = shortUrl;
+                              isShortened = true;
+                            } catch (e) {
+                              console.warn('URL shortening failed, falling back to long URL:', e);
+                            }
+                            
+                            navigator.clipboard.writeText(finalUrl).then(() => {
+                              if (isShortened) {
+                                alert(`「${tape.title}」的分享短網址已複製！快去貼給朋友吧！\n\n短網址：${finalUrl}`);
+                              } else {
+                                alert(`「${tape.title}」的分享連結已複製！\n\n(注意：短網址服務暫時不可用，已複製原長網址)`);
+                              }
                             }).catch(err => {
                               console.error('Failed to copy', err);
-                              prompt('請手動複製此連結：', shareUrl);
+                              prompt('請手動複製此連結：', finalUrl);
                             });
+                            
+                            setSharingId(null);
                           }}
                           style={{ 
-                            backgroundColor: '#00f3ff', 
+                            backgroundColor: sharingId === tape.id ? '#777' : '#00f3ff', 
                             color: '#000',
                             padding: '6px 8px',
-                            boxShadow: 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #fff, 0 0 0 2px #000'
+                            boxShadow: 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #fff, 0 0 0 2px #000',
+                            cursor: sharingId === tape.id ? 'wait' : 'pointer',
+                            opacity: sharingId === tape.id ? 0.7 : 1
                           }}
-                          title="Share Cassette"
+                          title={sharingId === tape.id ? "Shortening..." : "Share Cassette"}
+                          disabled={sharingId !== null}
                         >
-                          <ExternalLink size={12} />
+                          {sharingId === tape.id ? (
+                            <span style={{ fontSize: '8px', fontWeight: 'bold' }}>...</span>
+                          ) : (
+                            <ExternalLink size={12} />
+                          )}
                         </button>
                         <button 
                           className="pixel-btn" 

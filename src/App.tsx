@@ -157,6 +157,20 @@ function App() {
     }
   };
 
+  const handleClearAllCassettes = () => {
+    if (window.confirm('確定要清空所有自訂與分享的卡帶嗎？此動作無法復原。')) {
+      audioEngine.stop();
+      setCustomCassettes([]);
+      localStorage.removeItem('custom_cassettes');
+      
+      // If active cassette is a custom/shared one, eject it
+      if (activeCassette && !activeCassette.id.startsWith('default-')) {
+        setActiveCassette(null);
+      }
+      alert('所有自訂卡帶已成功清空！');
+    }
+  };
+
   // Cassette interaction events
   const handleSelectCassette = (cassette: Cassette) => {
     audioEngine.stop();
@@ -323,6 +337,7 @@ function App() {
             cassettes={allCassettes}
             onAddCassette={handleAddCassette}
             onDeleteCassette={handleDeleteCassette}
+            onClearAllCassettes={handleClearAllCassettes}
           />
         )}
       </div>

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Cassette, Track } from '../services/mockData';
 import {
   startSpotifyPlayback,
-  setSpotifyVolume
+  setSpotifyVolume,
+  transferSpotifyPlayback
 } from '../services/spotify';
 import { UseAudioPlayerReturn } from './useAudioPlayer';
 
@@ -97,6 +98,10 @@ export function useSpotifyPlayer(
         console.log('[Spotify SDK] Player ready, device_id:', device_id);
         deviceIdRef.current = device_id;
         setSdkReady(true);
+        // Transfer active playback to this Web player instance immediately
+        transferSpotifyPlayback(token, device_id, false).catch(err => {
+          console.warn('[Spotify SDK] Failed to transfer active playback:', err);
+        });
       });
 
       player.addListener('not_ready', ({ device_id }: { device_id: string }) => {

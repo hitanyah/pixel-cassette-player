@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Cassette, Track } from '../services/mockData';
+import { getTrackAtTime as calculateTrackAtTime } from '../utils/audioHelpers';
 
 export interface UseAudioPlayerReturn {
   isPlaying: boolean;
@@ -36,6 +37,7 @@ export function useAudioPlayer(
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   const progressIntervalRef = useRef<number | null>(null);
   const currentTrackIdRef = useRef<string | null>(null);
@@ -55,25 +57,7 @@ export function useAudioPlayer(
   const isDeckEmpty = cassette === null;
 
   // Find track and offset at a given side time
-  const getTrackAtTime = (time: number): { track: Track | null; index: number; offset: number } => {
-    let accumulated = 0;
-    for (let i = 0; i < sideTracks.length; i++) {
-      const t = sideTracks[i];
-      if (time >= accumulated && time < accumulated + t.duration) {
-        return { track: t, index: i, offset: time - accumulated };
-      }
-      accumulated += t.duration;
-    }
-    // If we reached the end
-    if (sideTracks.length > 0 && time >= sideDuration) {
-      return { 
-        track: sideTracks[sideTracks.length - 1], 
-        index: sideTracks.length - 1, 
-        offset: sideTracks[sideTracks.length - 1].duration 
-      };
-    }
-    return { track: null, index: -1, offset: 0 };
-  };
+  const getTrackAtTime = (time: number) => calculateTrackAtTime(time, sideTracks, sideDuration);
 
   const { track: activeTrack, index: activeTrackIndex, offset: trackPosition } = getTrackAtTime(sideTime);
 
@@ -110,6 +94,7 @@ export function useAudioPlayer(
         audioContextRef.current.close();
         audioContextRef.current = null;
       }
+      gainNodeRef.current = null;
     };
   }, []);
 
@@ -119,16 +104,22 @@ export function useAudioPlayer(
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContextClass();
+      
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 64; // Small size for blocky pixel spectrum
 
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+
       const source = ctx.createMediaElementSource(audioRef.current);
       source.connect(analyser);
-      analyser.connect(ctx.destination);
+      analyser.connect(gainNode);
+      gainNode.connect(ctx.destination);
 
       audioContextRef.current = ctx;
       analyserRef.current = analyser;
       sourceRef.current = source;
+      gainNodeRef.current = gainNode;
     } catch (e) {
       console.warn("Failed to initialize AudioContext, visualizer might not work: ", e);
     }
@@ -138,6 +129,9 @@ export function useAudioPlayer(
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
+    }
+    if (gainNodeRef.current && audioContextRef.current) {
+      gainNodeRef.current.gain.setValueAtTime(volume, audioContextRef.current.currentTime);
     }
   }, [volume]);
 
