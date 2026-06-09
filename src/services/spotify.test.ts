@@ -5,7 +5,10 @@ import {
   fetchSpotifyPlaylist,
   getStoredToken,
   transferSpotifyPlayback,
-  shortenUrl
+  shortenUrl,
+  compressString,
+  decompressString,
+  isLocalOrPrivateUrl
 } from './spotify';
 
 describe('Spotify Utility Helpers', () => {
@@ -285,6 +288,83 @@ describe('fetchSpotifyPlaylist API 映射測試', () => {
       await expect(shortenUrl(longUrl)).rejects.toThrow(mockError);
       
       appendChildSpy.mockRestore();
+    });
+  });
+
+  describe('compressString / decompressString 壓縮解壓縮', () => {
+    it('壓縮再解壓後應還原原始字串', async () => {
+      const original = JSON.stringify({
+        id: 'test-123',
+        title: 'TEST TAPE',
+        artist: 'Pixel Artist',
+        shellColor: '#ff007f',
+        stickerColor: '#ecebe4',
+        stickerPattern: 'stripes',
+        labelTextColor: '#000000',
+        tracks: [
+          { id: 't1', title: 'Track 1', artist: 'Artist A', duration: 210, url: 'https://example.com/track1.mp3' },
+          { id: 't2', title: 'Track 2', artist: 'Artist B', duration: 180, url: 'https://example.com/track2.mp3' },
+        ]
+      });
+
+      const compressed = await compressString(original);
+      expect(typeof compressed).toBe('string');
+      expect(compressed.length).toBeGreaterThan(0);
+      // 壓縮後長度應小於原始字串（gzip 壓縮比應 > 0%）
+      expect(compressed.length).toBeLessThan(original.length);
+
+      const restored = await decompressString(compressed);
+      expect(restored).toBe(original);
+    });
+
+    it('壓縮後的字串能正確進行 URL encodeURIComponent 並還原', async () => {
+      const original = '{"title":"CYBER MIX","artist":"Neon User","tracks":[]}';
+      const compressed = await compressString(original);
+      // Simulate URL round-trip: encode then decode
+      const encoded = encodeURIComponent(`v2.${compressed}`);
+      const decoded = decodeURIComponent(encoded);
+      expect(decoded.startsWith('v2.')).toBe(true);
+      const gzipPart = decoded.slice(3);
+      const restored = await decompressString(gzipPart);
+      expect(restored).toBe(original);
+    });
+
+    it('對損壞的 base64 字串解壓應丟出異常', async () => {
+      await expect(decompressString('not-valid-base64!!!')).rejects.toThrow();
+    });
+  });
+
+  describe('isLocalOrPrivateUrl 本機/私有 IP 偵測', () => {
+    it('localhost 應被識別為本機位址', () => {
+      expect(isLocalOrPrivateUrl('http://localhost:5173/')).toBe(true);
+    });
+
+    it('127.0.0.1 應被識別為本機位址', () => {
+      expect(isLocalOrPrivateUrl('http://127.0.0.1:3000/app')).toBe(true);
+    });
+
+    it('192.168.x.x 應被識別為私有位址', () => {
+      expect(isLocalOrPrivateUrl('http://192.168.1.100:8080/')).toBe(true);
+    });
+
+    it('10.x.x.x 應被識別為私有位址', () => {
+      expect(isLocalOrPrivateUrl('http://10.0.0.1/')).toBe(true);
+    });
+
+    it('172.16.x.x 應被識別為私有位址', () => {
+      expect(isLocalOrPrivateUrl('http://172.16.254.1/')).toBe(true);
+    });
+
+    it('172.32.x.x 不應被識別為私有位址', () => {
+      expect(isLocalOrPrivateUrl('http://172.32.0.1/')).toBe(false);
+    });
+
+    it('公開域名 (GitHub Pages) 不應被識別為本機位址', () => {
+      expect(isLocalOrPrivateUrl('https://user.github.io/pixel-cassette-player/')).toBe(false);
+    });
+
+    it('公開網域 example.com 不應被識別為本機位址', () => {
+      expect(isLocalOrPrivateUrl('https://example.com/app')).toBe(false);
     });
   });
 });

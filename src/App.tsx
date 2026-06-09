@@ -6,7 +6,7 @@ import { useSpotifyPlayer } from './hooks/useSpotifyPlayer';
 import { Walkman } from './components/Walkman/Walkman';
 import { CassetteRack } from './components/CassetteRack/CassetteRack';
 import { SettingsPage } from './components/Settings/SettingsPage';
-import { exchangeCodeForToken, getRedirectUri, getStoredToken, redirectToSpotifyAuth } from './services/spotify';
+import { exchangeCodeForToken, getRedirectUri, getStoredToken, redirectToSpotifyAuth, decompressString } from './services/spotify';
 
 function App() {
   const [page, setPage] = useState<'home' | 'settings'>('home');
@@ -110,42 +110,56 @@ function App() {
     }
 
     if (tapeQuery) {
-      try {
-        // Restore '+' signs if the browser or some chat app parsed them as spaces
-        const safeQuery = tapeQuery.replace(/ /g, '+');
-        const decodedString = decodeURIComponent(escape(atob(safeQuery)));
-        const importedCassette = JSON.parse(decodedString) as Cassette;
-        
-        // Ensure it has a valid ID and isn't completely bogus
-        if (importedCassette && importedCassette.title && importedCassette.tracks) {
-          // Add a prefix to ensure uniqueness
-          importedCassette.id = `shared-${Date.now()}`;
-          
-          setCustomCassettes(prev => {
-            const updated = [...prev, importedCassette];
-            localStorage.setItem('custom_cassettes', JSON.stringify(updated));
-            return updated;
-          });
-          
-          setActiveCassette(importedCassette);
-          
-          // Clear the URL parameter so it doesn't trigger again on refresh
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          if (importedCassette.isSpotifyPlaylist && clientQuery && !getStoredToken()) {
-            if (window.confirm(`成功收到卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否立即使用分享者的連線設定進行登入？`)) {
-              redirectToSpotifyAuth(clientQuery, getRedirectUri());
-              return;
-            }
+      // 支援新版 v2.{gzipBase64} 格式（向下相容舊版 base64 格式）
+      const parseSharedCassette = async () => {
+        try {
+          let decodedString: string;
+
+          if (tapeQuery.startsWith('v2.')) {
+            // 新版：gzip 壓縮格式
+            const gzipBase64 = tapeQuery.slice(3).replace(/ /g, '+');
+            decodedString = await decompressString(gzipBase64);
           } else {
-            alert(`成功收到並匯入朋友分享的卡帶：「${importedCassette.title}」！`);
+            // 舊版：直接 Base64 格式
+            const safeQuery = tapeQuery.replace(/ /g, '+');
+            decodedString = decodeURIComponent(escape(atob(safeQuery)));
           }
+
+          const importedCassette = JSON.parse(decodedString) as Cassette;
+          
+          // Ensure it has a valid ID and isn't completely bogus
+          if (importedCassette && importedCassette.title && importedCassette.tracks) {
+            // Add a prefix to ensure uniqueness
+            importedCassette.id = `shared-${Date.now()}`;
+            
+            setCustomCassettes(prev => {
+              const updated = [...prev, importedCassette];
+              localStorage.setItem('custom_cassettes', JSON.stringify(updated));
+              return updated;
+            });
+            
+            setActiveCassette(importedCassette);
+            
+            // Clear the URL parameter so it doesn't trigger again on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            if (importedCassette.isSpotifyPlaylist && clientQuery && !getStoredToken()) {
+              if (window.confirm(`成功收到卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否立即使用分享者的連線設定進行登入？`)) {
+                redirectToSpotifyAuth(clientQuery, getRedirectUri());
+                return;
+              }
+            } else {
+              alert(`成功收到並匯入朋友分享的卡帶：「${importedCassette.title}」！`);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to parse shared cassette:', err);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          alert('無法匯入卡帶，分享連結可能已損壞或過期！');
         }
-      } catch (err) {
-        console.error('Failed to parse shared cassette:', err);
-        window.history.replaceState({}, document.title, window.location.pathname);
-        alert('無法匯入卡帶，分享連結可能已損壞或過期！');
-      }
+      };
+
+      parseSharedCassette();
     }
   }, []);
 

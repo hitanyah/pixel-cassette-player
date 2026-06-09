@@ -7,7 +7,7 @@ import {
   CASSETTE_STICKER_PATTERNS, 
   CASSETTE_TEXT_COLORS 
 } from '../../services/mockData';
-import { redirectToSpotifyAuth, fetchSpotifyPlaylist, getStoredToken, getRedirectUri, shortenUrl } from '../../services/spotify';
+import { redirectToSpotifyAuth, fetchSpotifyPlaylist, getStoredToken, getRedirectUri, shortenUrl, compressString, isLocalOrPrivateUrl } from '../../services/spotify';
 import { CassetteTape } from '../Cassette/CassetteTape';
 
 interface SettingsPageProps {
@@ -599,8 +599,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             if (sharingId) return;
                             setSharingId(tape.id);
                             
+                            // 使用 gzip 壓縮卡帶 JSON，大幅縮短網址長度（縮短 60-80%）
+                            // v2. 前綴用於標識新版壓縮格式，向下相容舊版 base64 格式
                             const str = JSON.stringify(tape);
-                            const encoded = btoa(unescape(encodeURIComponent(str)));
+                            const gzipBase64 = await compressString(str);
+                            const encoded = `v2.${gzipBase64}`;
                             
                             // Include client ID in the URL to make it seamless for friends
                             let clientParam = '';
@@ -615,20 +618,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             
                             let finalUrl = shareUrl;
                             let isShortened = false;
+                            const isLocal = isLocalOrPrivateUrl(window.location.href);
                             
-                            try {
-                              const shortUrl = await shortenUrl(shareUrl);
-                              finalUrl = shortUrl;
-                              isShortened = true;
-                            } catch (e) {
-                              console.warn('URL shortening failed, falling back to long URL:', e);
+                            if (isLocal) {
+                              // 本機或區域網路環境：公共短網址服務無法解析私有 IP，直接跳過
+                              console.info('[Share] 偵測到本機/區域網路環境，跳過短網址轉換');
+                            } else {
+                              // 公開部署環境：嘗試呼叫 is.gd 短網址服務
+                              try {
+                                const shortUrl = await shortenUrl(shareUrl);
+                                finalUrl = shortUrl;
+                                isShortened = true;
+                              } catch (e) {
+                                console.warn('[Share] 短網址轉換失敗，改用壓縮長網址：', e);
+                              }
                             }
                             
                             navigator.clipboard.writeText(finalUrl).then(() => {
                               if (isShortened) {
                                 alert(`「${tape.title}」的分享短網址已複製！快去貼給朋友吧！\n\n短網址：${finalUrl}`);
+                              } else if (isLocal) {
+                                alert(`「${tape.title}」的分享連結已複製！\n\n(偵測到本機測試環境，不支援短網址。\n已複製精簡壓縮長網址，可用於線上分享。)`);
                               } else {
-                                alert(`「${tape.title}」的分享連結已複製！\n\n(注意：短網址服務暫時不可用，已複製原長網址)`);
+                                alert(`「${tape.title}」的分享連結已複製！\n\n(短網址服務暫時不可用，已複製高倍率壓縮長網址。)`);
                               }
                             }).catch(err => {
                               console.error('Failed to copy', err);

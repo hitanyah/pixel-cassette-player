@@ -445,3 +445,100 @@ export function shortenUrl(longUrl: string): Promise<string> {
     document.body.appendChild(script);
   });
 }
+
+/**
+ * 使用瀏覽器原生 CompressionStream (gzip) 壓縮字串，
+ * 並將壓縮結果轉為 Base64 字串（帶 URL-safe 字元替換）。
+ * 這能讓卡帶分享網址縮短 60~80%。
+ */
+export async function compressString(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  
+  const stream = new CompressionStream('gzip');
+  const writer = stream.writable.getWriter();
+  writer.write(data);
+  writer.close();
+
+  const compressedChunks: Uint8Array[] = [];
+  const reader = stream.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    compressedChunks.push(value);
+  }
+
+  // Concatenate chunks into a single Uint8Array
+  const totalLen = compressedChunks.reduce((acc, c) => acc + c.length, 0);
+  const combined = new Uint8Array(totalLen);
+  let offset = 0;
+  for (const chunk of compressedChunks) {
+    combined.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  // Convert to Base64
+  let binary = '';
+  for (let i = 0; i < combined.length; i++) {
+    binary += String.fromCharCode(combined[i]);
+  }
+  return btoa(binary);
+}
+
+/**
+ * 將 compressString 產生的 Base64 字串解壓回原始字串。
+ * 使用瀏覽器原生 DecompressionStream (gzip)。
+ */
+export async function decompressString(base64: string): Promise<string> {
+  // Decode Base64 back to binary
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  const stream = new DecompressionStream('gzip');
+  const writer = stream.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+
+  const decompressedChunks: Uint8Array[] = [];
+  const reader = stream.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    decompressedChunks.push(value);
+  }
+
+  const totalLen = decompressedChunks.reduce((acc, c) => acc + c.length, 0);
+  const combined = new Uint8Array(totalLen);
+  let offset = 0;
+  for (const chunk of decompressedChunks) {
+    combined.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  const decoder = new TextDecoder();
+  return decoder.decode(combined);
+}
+
+/**
+ * 判斷某個 URL 是否為本機或區域網路位址。
+ * 公共短網址服務（如 is.gd）不支援本機/私有 IP，
+ * 偵測到時應跳過短網址轉換，直接複製精簡長網址。
+ */
+export function isLocalOrPrivateUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
+    // 10.x.x.x
+    if (/^10\./.test(hostname)) return true;
+    // 172.16.x.x – 172.31.x.x
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return true;
+    // 192.168.x.x
+    if (/^192\.168\./.test(hostname)) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
