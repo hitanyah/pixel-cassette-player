@@ -34,6 +34,16 @@
 * **桌面並排模式**：在寬螢幕下，隨身聽與卡帶架會完美並排，所有操作一目瞭然。
 * **手機堆疊模式**：螢幕寬度縮小於 800px 時，會自動切換為垂直堆疊排列，並確保沒有多餘的水平卷軸。
 
+### 6. 全站畫素風彈窗系統 (Custom Pixel Modal)
+* **全自訂 8-Bit 彈窗**：全面替換瀏覽器原生的 `alert()` 與 `confirm()`，使用 PICO-8 調色盤按鈕與 8-bit 字型，保持擬真畫素美學。
+* **CRT 濾鏡溢出修復**：透過將彈窗元件放置於 CRT filter 容器外側，避免 CSS `transform` / `perspective` 對 `position: fixed` 的裁切，實現真正的全螢幕模糊遮罩。
+* **頁面滾動鎖定**：彈窗開啟時自動鎖定網頁 body 滾動（`overflow: hidden`），防止使用者下拉滾動條時背景破綻。
+
+### 7. Spotify 播放強健性與引導優化
+* **自動停帶與防競態 (Ref Guard)**：新增 `sideFinishedRef` 狀態守衛，在卡帶 Side A/B 播完時主動攔截並暫停播放器，徹底解決 Spotify SDK 狀態變更事件在雙向同步時的 Race Condition。
+* **Console 報錯清理**：消除 SDK 初始化階段呼叫 API 的延遲 404 REST API 警示，全面改用 Web Playback SDK 原生方法進行控制。
+* **☟ 點此連線引導氣泡**：引入動態跳躍的箭頭氣泡（`☟ 點此連線`），以精準的 CSS 黑色/黃色雙三角形邊框指向按鈕，在 Spotify 連線失效或剛匯入卡帶時強烈引導使用者進行登入。
+
 ---
 
 ## 🚀 快速開始
@@ -91,8 +101,9 @@ pixel-cassette-player/
 │   │   ├── Walkman/
 │   │   │   ├── DisplayScreen.tsx     # LCD 與 Canvas 頻譜視覺化元件
 │   │   │   └── Walkman.tsx           # 隨身聽主機與控制按鍵元件
-│   │   └── Settings/
-│   │       └── SettingsPage.tsx      # 自訂卡帶配色與 Spotify 串接後臺
+│   │   ├── Settings/
+│   │   │   └── SettingsPage.tsx      # 自訂卡帶配色與 Spotify 串接後臺
+│   │   └── PixelModal.tsx            # 畫素風自訂彈窗元件 (Alert / Confirm)
 │   ├── hooks/
 │   │   ├── useAudioPlayer.ts         # 基於 Web Audio API 封裝的播放引擎
 │   │   └── useSpotifyPlayer.ts       # 基於 Spotify Web Playback SDK 的播放引擎

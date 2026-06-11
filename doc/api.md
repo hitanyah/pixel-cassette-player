@@ -82,8 +82,9 @@ sequenceDiagram
    - *註：A 面播放偏移位置為 `0`；B 面播放偏移位置為歌單曲目長度的一半。*
 
 2. **暫停/調整音量 (Pause / Volume)**
-   - **暫停網址**：`PUT https://api.spotify.com/v1/me/player/pause`
-   - **音量網址**：`PUT https://api.spotify.com/v1/me/player/volume?volume_percent={volume_0_to_100}`
+   - **暫停控制**：呼叫 SDK 本地 `player.pause()` 方法以實現無延遲暫停。
+   - **音量控制**：呼叫 SDK 本地 `player.setVolume(volume)` 方法（值範圍為 `0` 到 `1`）。
+   - *註：原先使用的 Spotify REST API `/v1/me/player/volume` 與 `/v1/me/player/pause` 端點在 SDK 初始化 `ready` 後立即調用時，會因 Spotify 雲端伺服器與本機裝置啟動時差而返回 `404 (Device not active)` 控制台紅色警告。改用 Web Playback SDK 本地 API 方法調用後已完全消除此報錯。*
 
 3. **歌曲切換控制 (Next / Previous)**
    - **下一首**：呼叫 SDK `player.nextTrack()` 方法 (對應 `POST /v1/me/player/next`)
@@ -99,6 +100,14 @@ sequenceDiagram
      }
      ```
    - *註：當 SDK 連線成功觸發 ready 時呼叫，將使用者的活動會話鎖定於本瀏覽器裝置。*
+
+### C. Spotify 播放器狀態同步與邊界守衛 (Side End Interception Guard)
+由於 Spotify 是一個連續的播放流，為了模擬實體卡帶 AB 面單獨播放與播完停帶功能，系統在 `useSpotifyPlayer.ts` 中實作了以下同步守衛：
+1. **`sideFinishedRef` 狀態鎖**：
+   - 用於防止 SDK `player_state_changed` 事件的非同步延遲回傳。當監測到當前 Side 的累計播放時間 `sideTime` 超過該面總時長 `sideDuration` 時，系統會將 `sideFinishedRef.current` 設為 `true`，並主動對 SDK 發送 `player.pause()`。
+   - 在此狀態下，所有來自 SDK 的播放狀態更新都將被忽略，直到使用者執行了「翻面」或「載入新卡帶」等操作，從而解鎖 `sideFinishedRef`，避免了 Spotify SDK 自動載入下一首歌時，回傳的播放狀態與隨身聽的「停帶翻面」UI 產生畫面衝突（Race Condition）。
+2. **重新播放機制**：
+   - 當卡帶一面播放結束時，`hasFinishedSide` 會被標記。此時如果使用者不翻面，而是在該面直接點擊 `PLAY` 按鈕，系統會將 `sideFinishedRef.current` 與 `hasFinishedSide` 解除，並將 `sideTime` 與 `trackPosition` 歸零，重新向 Spotify API 發起包含對應 Side 偏移量（Offset Index）的 `startSpotifyPlayback` 請求，使該面從頭播放。
 
 ---
 

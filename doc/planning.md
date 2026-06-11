@@ -18,6 +18,7 @@ graph TD
     App[App.tsx - 全域狀態] --> Walkman[components/Walkman/Walkman.tsx]
     App --> CassetteRack[components/CassetteRack/CassetteRack.tsx]
     App --> SettingsPage[components/Settings/SettingsPage.tsx]
+    App --> PixelModal[components/PixelModal.tsx - 畫素風自訂彈窗]
     
     Walkman --> DisplayScreen[Walkman/DisplayScreen.tsx]
     Walkman --> CassetteTape[components/Cassette/CassetteTape.tsx]
@@ -29,12 +30,13 @@ graph TD
 ```
 
 ### 元件職責說明：
-* **`App.tsx`**：管理全域狀態（當前載入卡帶、當前頁面、播放Side、磁帶艙門狀態）。
+* **`App.tsx`**：管理全域狀態（當前載入卡帶、當前頁面、播放Side、磁帶艙門狀態，以及全域畫素風彈窗狀態與處理器）。
 * **`Walkman.tsx`**：隨身聽機身元件，整合液晶螢幕、按鍵控制項與 3D 卡帶翻轉的動畫容器。
 * **`DisplayScreen.tsx`**：畫素液晶顯示螢幕，負責繪製 Canvas 波形與數字時鐘。
 * **`CassetteTape.tsx`**：物理卡帶渲染元件，根據進度以 SVG 齒輪進行旋轉、並增減左右軸磁帶繞線寬度。
 * **`CassetteRack.tsx`**：卡帶收納架，可點選以自動化流程裝載卡帶。
-* **`SettingsPage.tsx`**：卡帶編輯後臺，處理外觀自訂與 Spotify PKCE 授權。
+* **`SettingsPage.tsx`**：卡帶編輯後臺，處理外觀自訂與 Spotify PKCE 授權，並包含引導使用者的懸浮氣泡。
+* **`PixelModal.tsx`**：畫素風自訂彈窗，取代瀏覽器內建的 `alert` 與 `confirm`，採用 PICO-8 像素配色並透過 Promise 非同步返回互動結果。
 * **`useAudioPlayer.ts`**：核心音訊 Hook，控制 Audio 物件與 `AudioContext` 頻譜串接。
 
 ---
@@ -105,4 +107,31 @@ stateDiagram-v2
 
 公共短網址服務（如 is.gd）的防釣魚/反垃圾過濾器會主動拒絕含有 Base64 字串的 URL。
 採用 gzip + URL-safe Base64 後，分享網址已縮短至足夠精簡的長度，可直接在通訊軟體、信件中傳遞，不需要第三方短網址服務。
+
+---
+
+## 6. 全站彈窗與互動最佳化設計 (UX & Modal Architecture)
+
+為提升隨身聽的操作流暢度並維持復古畫素美學，專案針對對話框與 Spotify 連線異常流程進行了深度設計：
+
+### A. 全站畫素風彈窗系統 (Custom Pixel Modal)
+1. **替代方案與非同步介面**：
+   - 由於瀏覽器內建的 `alert()` / `confirm()` 會破壞隨身聽的沉浸式畫素美感，我們設計了統一的 `<PixelModal />` 元件。
+   - 使用 Promise 架構封裝（如 `showPixelAlert(message, title)` 與 `showPixelConfirm(message, title): Promise<boolean>`），以便在代碼中以非同步 Promise 方式處理確認與取消動作，與主流 React 狀態驅動工作流完美整合。
+2. **DOM 層級提升 (Root Hoisting)**：
+   - 隨身聽使用了 CRT filter 濾鏡（`filter: contrast(1.15) brightness(1.1) ...`）與 3D 傾斜視角（`transform: perspective(800px) ...`）。
+   - 根據 CSS 規範，當父元素帶有 `transform` 或 `filter` 時，子元素的 `position: fixed` 將以該父元素作為定位參照，而非 window，導致滿版遮罩被裁剪至隨身聽區塊內。
+   - **解決方案**：將 `<PixelModal />` 提升至 React 最外層 Fragment 渲染，與 CRT 容器平級，實現真正的 100vw/100vh 滿版模糊遮罩。
+3. **視窗捲軸鎖定 (Body Scroll Lock)**：
+   - 在行動端或小螢幕下，彈窗出現時背景仍能滾動，容易造成邊角露出與視覺不一致。
+   - 實作在彈窗 `isOpen` 時，動態將 `document.body.style.overflow = 'hidden'`，關閉時還原，徹底鎖定背景頁面。
+
+### B. Spotify 連線失效與卡帶匯入引導流程
+1. **連線失效自動跳轉**：
+   - 當 Spotify 播放器的 Access Token 過期或 SDK 拋出 Account/Auth 錯誤時，LCD 螢幕會顯示紅色閃爍警示。
+   - 若使用者此時點擊隨身聽 `PLAY` 按鈕，系統會攔截動作並跳出 `🔌 RECONNECT SPOTIFY` 畫素確認彈窗，點選確認後自動切換至「卡帶工作室」頁面。
+2. **☟ 點此連線懸浮引導氣泡**：
+   - 當使用者因上述失效或剛匯入了一張需授權的 Spotify 卡帶而被引導到工作室時，系統會在 `CONNECT` 按鈕上方顯示一個動態跳躍（Bounce Animation）的黃底黑邊引導氣泡（`☟ 點此連線`）。
+   - 該氣泡使用 CSS `border-width` 屬性構造雙層三角形，精準且無縫指向按鈕，強烈提示使用者登入，大幅降低使用者的認知負荷。
+
 
