@@ -21,6 +21,7 @@ export interface UseAudioPlayerReturn {
   isDeckEmpty: boolean;
   triggerFlip: () => void;
   hasFinishedSide: boolean;
+  isSpotifyDisconnected?: boolean;
 }
 
 export function useAudioPlayer(

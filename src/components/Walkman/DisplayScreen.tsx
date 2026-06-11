@@ -10,6 +10,7 @@ interface DisplayScreenProps {
   currentSide: 'A' | 'B';
   isSpotifyStream?: boolean;
   hasFinishedSide?: boolean;
+  isSpotifyDisconnected?: boolean;
 }
 
 export const DisplayScreen: React.FC<DisplayScreenProps> = ({
@@ -19,7 +20,8 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
   analyser,
   currentSide,
   isSpotifyStream = false,
-  hasFinishedSide = false
+  hasFinishedSide = false,
+  isSpotifyDisconnected = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -129,15 +131,15 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
         {/* LCD Info Left (Time & Playback status) */}
         <div style={{ flex: '1.2', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           {/* Top Line: Mode Indicator */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', fontFamily: 'var(--font-pixel)', color: '#39ff14', opacity: 0.8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', fontFamily: 'var(--font-pixel)', color: isSpotifyDisconnected ? '#ff3b30' : '#39ff14', opacity: 0.8 }}>
             <span>SIDE {currentSide}</span>
             <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               {isSpotifyStream && (
-                <span style={{ color: '#1db954', fontWeight: 'bold', animation: isPlaying ? 'pulse 1.5s infinite' : 'none' }}>
+                <span style={{ color: isSpotifyDisconnected ? '#ff3b30' : '#1db954', fontWeight: 'bold', animation: isPlaying ? 'pulse 1.5s infinite' : 'none' }}>
                   🎧 SPOTIFY
                 </span>
               )}
-              {isPlaying ? '▶ PLAY' : '■ STOP'}
+              {isSpotifyDisconnected ? '⚠️ ERROR' : isPlaying ? '▶ PLAY' : '■ STOP'}
             </span>
           </div>
 
@@ -145,15 +147,15 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
           <div 
             className="font-lcd" 
             style={{ 
-              fontSize: '36px', 
-              color: '#39ff14', 
+              fontSize: isSpotifyDisconnected ? '28px' : '36px', 
+              color: isSpotifyDisconnected ? '#ff3b30' : '#39ff14', 
               lineHeight: '1', 
               marginTop: '4px',
-              textShadow: '0 0 6px rgba(57,255,20,0.5)',
+              textShadow: isSpotifyDisconnected ? '0 0 6px rgba(255,59,48,0.5)' : '0 0 6px rgba(57,255,20,0.5)',
               letterSpacing: '1px'
             }}
           >
-            {formatTime(sideTime)}
+            {isSpotifyDisconnected ? 'OFF LINE' : formatTime(sideTime)}
           </div>
         </div>
 
@@ -166,15 +168,27 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
               whiteSpace: 'nowrap', 
               fontSize: '8px', 
               fontFamily: 'var(--font-pixel)', 
-              color: '#39ff14',
-              backgroundColor: 'rgba(57,255,20,0.1)',
+              color: isSpotifyDisconnected ? '#ff3b30' : '#39ff14',
+              backgroundColor: isSpotifyDisconnected ? 'rgba(255,59,48,0.1)' : 'rgba(57,255,20,0.1)',
               padding: '2px 4px',
               height: '14px',
               display: 'flex',
               alignItems: 'center'
             }}
           >
-            {activeTrack ? (
+            {isSpotifyDisconnected ? (
+              <div 
+                className="marquee"
+                style={{ 
+                  animation: 'marquee 10s linear infinite',
+                  whiteSpace: 'nowrap',
+                  color: '#ff3b30',
+                  fontWeight: 'bold'
+                }}
+              >
+                ⚠️ SPOTIFY DISCONNECTED - CLICK PLAY TO RECONNECT
+              </div>
+            ) : activeTrack ? (
               <div 
                 className={hasFinishedSide ? "" : "marquee"}
                 style={{ 

@@ -73,7 +73,8 @@ export function useSpotifyPlayer(
   // Ref to guard against player_state_changed resetting the finished state (race condition)
   const sideFinishedRef = useRef(false);
 
-  const isDeckEmpty = cassette === null || !token;
+  const isDeckEmpty = cassette === null;
+  const isSpotifyDisconnected = cassette !== null && !token;
 
   // Compute sideTracks: first half on A, second half on B
   const sideTracks: Track[] = (() => {
@@ -395,6 +396,7 @@ export function useSpotifyPlayer(
     analyser: null,   // SDK uses its own audio pipeline, no Web Audio API access
     isDeckEmpty,
     triggerFlip,
-    hasFinishedSide
+    hasFinishedSide,
+    isSpotifyDisconnected
   };
 }

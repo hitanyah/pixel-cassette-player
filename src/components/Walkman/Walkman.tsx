@@ -40,7 +40,8 @@ export const Walkman: React.FC<WalkmanProps> = ({
     setVolume,
     analyser,
     isDeckEmpty,
-    hasFinishedSide
+    hasFinishedSide,
+    isSpotifyDisconnected = false
   } = audioEngine;
 
   const [isFlipping, setIsFlipping] = useState(false);
@@ -188,6 +189,7 @@ export const Walkman: React.FC<WalkmanProps> = ({
         currentSide={currentSide}
         isSpotifyStream={!!cassette?.isSpotifyPlaylist}
         hasFinishedSide={hasFinishedSide}
+        isSpotifyDisconnected={isSpotifyDisconnected}
       />
 
       {/* Cassette Tape Deck Compartment */}
