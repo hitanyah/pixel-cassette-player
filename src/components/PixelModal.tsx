@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface PixelModalProps {
   isOpen: boolean;
@@ -17,6 +17,17 @@ export const PixelModal: React.FC<PixelModalProps> = ({
   onConfirm,
   onCancel
 }) => {
+  // Lock body scroll when the modal is open to avoid artifacts/gaps when scrolling behind
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   // Split multi-line messages to support nice line breaks
@@ -28,8 +39,8 @@ export const PixelModal: React.FC<PixelModalProps> = ({
         position: 'fixed',
         top: 0,
         left: 0,
-        width: '100vw',
-        height: '100vh',
+        right: 0,
+        bottom: 0,
         backgroundColor: 'rgba(3, 10, 5, 0.75)', // CRT green-tinted dark overlay
         backdropFilter: 'blur(3px)',
         zIndex: 10000,

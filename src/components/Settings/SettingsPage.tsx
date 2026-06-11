@@ -275,28 +275,62 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             bottom: '100%',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            marginBottom: '12px',
+                            marginBottom: '16px',
                             backgroundColor: '#ffec27',
                             color: '#000',
-                            fontSize: '8px',
-                            padding: '6px 8px',
-                            border: '2px solid #000',
-                            boxShadow: '2px 2px 0 #000',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            padding: '8px 12px',
+                            border: '3px solid #000',
+                            boxShadow: '4px 4px 0 #000',
                             zIndex: 100,
                             whiteSpace: 'nowrap',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            justifyContent: 'center',
+                            gap: '6px'
                           }}
                         >
-                          <span>☟ 點此連線</span>
+                          <span>☟ 點此連線登入</span>
+                          
+                          {/* Yellow Triangle pointer down (seamlessly connected to bubble background) */}
+                          <div 
+                            style={{
+                              position: 'absolute',
+                              top: 'calc(100% - 3px)',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: 0,
+                              height: 0,
+                              borderLeft: '8px solid transparent',
+                              borderRight: '8px solid transparent',
+                              borderTop: '8px solid #ffec27',
+                              zIndex: 102
+                            }}
+                          />
+                          {/* Black border Triangle pointer down */}
+                          <div 
+                            style={{
+                              position: 'absolute',
+                              top: 'calc(100% - 3px)',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: 0,
+                              height: 0,
+                              borderLeft: '11px solid transparent',
+                              borderRight: '11px solid transparent',
+                              borderTop: '11px solid #000',
+                              zIndex: 101
+                            }}
+                          />
+
                           <style>{`
                             .bounce-arrow {
                               animation: bounceUpDown 0.6s infinite alternate;
                             }
                             @keyframes bounceUpDown {
                               from { transform: translateY(0) translateX(-50%); }
-                              to { transform: translateY(-6px) translateX(-50%); }
+                              to { transform: translateY(-8px) translateX(-50%); }
                             }
                           `}</style>
                         </div>
