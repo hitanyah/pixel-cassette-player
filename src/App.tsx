@@ -231,14 +231,22 @@ function App() {
   };
 
   const handleDeleteCassette = (id: string) => {
-    const updated = customCassettes.filter(c => c.id !== id);
-    setCustomCassettes(updated);
-    localStorage.setItem('custom_cassettes', JSON.stringify(updated));
-    // If the active cassette is deleted, unload it
-    if (activeCassette && activeCassette.id === id) {
-      audioEngine.stop();
-      setActiveCassette(null);
-    }
+    const tape = customCassettes.find(c => c.id === id);
+    const title = tape ? tape.title : '這張卡帶';
+
+    showPixelConfirm(`確定要刪除卡帶「${title}」嗎？\n刪除後將無法復原。`, '🗑️ DELETE CASSETTE')
+      .then((ok) => {
+        if (ok) {
+          const updated = customCassettes.filter(c => c.id !== id);
+          setCustomCassettes(updated);
+          localStorage.setItem('custom_cassettes', JSON.stringify(updated));
+          // If the active cassette is deleted, unload it
+          if (activeCassette && activeCassette.id === id) {
+            audioEngine.stop();
+            setActiveCassette(null);
+          }
+        }
+      });
   };
 
   const handleClearAllCassettes = () => {
