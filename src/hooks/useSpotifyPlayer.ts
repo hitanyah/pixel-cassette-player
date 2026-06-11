@@ -70,6 +70,8 @@ export function useSpotifyPlayer(
   const currentStateRef = useRef<SpotifyPlayerState | null>(null);
   const lastKnownPositionRef = useRef(0);
   const lastKnownTimestampRef = useRef(Date.now());
+  // Ref to guard against player_state_changed resetting the finished state (race condition)
+  const sideFinishedRef = useRef(false);
 
   const isDeckEmpty = cassette === null || !token;
 
@@ -113,6 +115,14 @@ export function useSpotifyPlayer(
       player.addListener('player_state_changed', (state: SpotifyPlayerState | null) => {
         if (!state) return;
         currentStateRef.current = state;
+
+        // ★ 若這一面已播完並停止，忽略後續 SDK 狀態更新，防止自動跳下一首重置狀態
+        if (sideFinishedRef.current) {
+          if (!state.paused) {
+            playerRef.current?.pause();
+          }
+          return;
+        }
         
         const spotifyTrack = state.track_window.current_track;
         const positionSec = state.position / 1000;
@@ -143,13 +153,13 @@ export function useSpotifyPlayer(
           const validForCurrentSide = isSideA ? (absoluteIdx < half) : (absoluteIdx >= half);
 
           if (absoluteIdx !== -1 && !validForCurrentSide) {
-             // The user skipped past the end of the current side!
-             // We should stop playback and set hasFinishedSide = true
+             // Spotify jumped to the other side's track → stop and mark side as finished
+             sideFinishedRef.current = true;
              playerRef.current?.pause();
              setIsPlaying(false);
              setHasFinishedSide(true);
              setSideTime(sideDuration); // max out the visual progress
-             return; // Stop updating state for the wrong side
+             return;
           }
 
           // If valid, calculate sideTime relative to the current side
@@ -161,11 +171,15 @@ export function useSpotifyPlayer(
           
           setActiveTrackIndex(Math.max(0, absoluteIdx - startIndex));
           setSideTime(accumulated + positionSec);
-          setHasFinishedSide(false);
+          // Only reset hasFinishedSide if we're genuinely resuming (not already finished)
+          if (!sideFinishedRef.current) {
+            setHasFinishedSide(false);
+          }
         }
 
         // Detect end of playlist context
         if (state.paused && state.position === 0 && !state.track_window.current_track) {
+          sideFinishedRef.current = true;
           setHasFinishedSide(true);
           setIsPlaying(false);
         }
@@ -217,6 +231,10 @@ export function useSpotifyPlayer(
         setSideTime(prev => {
           const next = prev + 0.2;
           if (next >= sideDuration && sideDuration > 0) {
+            // ★ 關鍵修正：除了更新 UI 狀態外，還要真正暫停 Spotify SDK，
+            //   防止 SDK 自動跳到下一首並觸發 player_state_changed 重置狀態
+            sideFinishedRef.current = true;
+            playerRef.current?.pause();
             setHasFinishedSide(true);
             setIsPlaying(false);
             return sideDuration;
@@ -272,6 +290,7 @@ export function useSpotifyPlayer(
 
   // Reset on cassette/side change
   useEffect(() => {
+    sideFinishedRef.current = false;  // 換卡帶或換面時，重置完成狀態守衛
     setSideTime(0);
     setHasFinishedSide(false);
     setIsPlaying(false);
@@ -285,20 +304,46 @@ export function useSpotifyPlayer(
       }
       return;
     }
-    if (isDeckEmpty || !playerRef.current) return;
+    if (isDeckEmpty || !playerRef.current || !deviceIdRef.current) return;
     if (!sdkReady) {
       alert('Spotify 播放器尚未就緒，請稍候再試！');
       return;
     }
+
+    // 若該面已播放完畢，點選播放則從該面的第一首歌重新播放
+    if (sideFinishedRef.current || hasFinishedSide || (sideDuration > 0 && sideTime >= sideDuration)) {
+      sideFinishedRef.current = false;
+      setHasFinishedSide(false);
+      setSideTime(0);
+      setTrackPosition(0);
+
+      const contextUri = cassette.spotifyUri || `spotify:playlist:${cassette.spotifyPlaylistId}`;
+      const half = Math.ceil(cassette.tracks.length / 2);
+      const startOffset = currentSide === 'B' ? half : 0;
+
+      startSpotifyPlayback(token, deviceIdRef.current, contextUri, startOffset)
+        .then(() => {
+          console.log('[Spotify SDK] Re-started playback for side', currentSide);
+          setIsPlaying(true);
+        })
+        .catch(err => {
+          console.error('[Spotify SDK] Failed to restart playback:', err);
+        });
+      return;
+    }
+
+    sideFinishedRef.current = false;
     playerRef.current.resume().then(() => setIsPlaying(true));
   };
 
   const pause = () => {
     if (!playerRef.current) return;
+    sideFinishedRef.current = false;
     playerRef.current.pause().then(() => setIsPlaying(false));
   };
 
   const stop = () => {
+    sideFinishedRef.current = false;
     setIsPlaying(false);
     if (playerRef.current) {
       playerRef.current.pause();
@@ -307,6 +352,7 @@ export function useSpotifyPlayer(
 
   const nextTrack = () => {
     if (isDeckEmpty || !playerRef.current) return;
+    sideFinishedRef.current = false;
     playerRef.current.nextTrack().then(() => {
       console.log('[Spotify SDK] Skipped to next track');
     }).catch((err: any) => {
@@ -316,6 +362,7 @@ export function useSpotifyPlayer(
 
   const previousTrack = () => {
     if (isDeckEmpty || !playerRef.current) return;
+    sideFinishedRef.current = false;
     playerRef.current.previousTrack().then(() => {
       console.log('[Spotify SDK] Skipped to previous track');
     }).catch((err: any) => {
