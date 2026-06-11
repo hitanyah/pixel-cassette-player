@@ -17,6 +17,7 @@ interface SettingsPageProps {
   onDeleteCassette: (id: string) => void;
   onClearAllCassettes: () => void;
   showAlert?: (msg: string, title?: string) => void;
+  highlightConnect?: boolean;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -25,7 +26,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onAddCassette,
   onDeleteCassette,
   onClearAllCassettes,
-  showAlert
+  showAlert,
+  highlightConnect = false
 }) => {
   // Spotify Integration States
   const [clientId, setClientId] = useState(() => localStorage.getItem('spotify_client_id') || '');
@@ -264,10 +266,46 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                         fontSize: '12px'
                       }}
                     />
-                    <button type="submit" className="pixel-btn" style={{ backgroundColor: '#00f3ff', color: '#000' }}>
-                      <Key size={14} />
-                      CONNECT
-                    </button>
+                    <div style={{ position: 'relative' }}>
+                      {highlightConnect && !isConnected && (
+                        <div 
+                          className="bounce-arrow font-pixel"
+                          style={{
+                            position: 'absolute',
+                            bottom: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            marginBottom: '12px',
+                            backgroundColor: '#ffec27',
+                            color: '#000',
+                            fontSize: '8px',
+                            padding: '6px 8px',
+                            border: '2px solid #000',
+                            boxShadow: '2px 2px 0 #000',
+                            zIndex: 100,
+                            whiteSpace: 'nowrap',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <span>☟ 點此連線</span>
+                          <style>{`
+                            .bounce-arrow {
+                              animation: bounceUpDown 0.6s infinite alternate;
+                            }
+                            @keyframes bounceUpDown {
+                              from { transform: translateY(0) translateX(-50%); }
+                              to { transform: translateY(-6px) translateX(-50%); }
+                            }
+                          `}</style>
+                        </div>
+                      )}
+                      <button type="submit" className="pixel-btn" style={{ backgroundColor: '#00f3ff', color: '#000', height: '100%' }}>
+                        <Key size={14} />
+                        CONNECT
+                      </button>
+                    </div>
                   </div>
                 </div>
               </form>
