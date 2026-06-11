@@ -53,7 +53,9 @@ export function useSpotifyPlayer(
   cassette: Cassette | null,
   currentSide: 'A' | 'B',
   token: string | null,
-  onAuthError?: () => void
+  onAuthError?: () => void,
+  showAlert?: (msg: string, title?: string) => void,
+  showConfirm?: (msg: string, title?: string) => Promise<boolean>
 ): UseAudioPlayerReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(0.8);
@@ -197,7 +199,11 @@ export function useSpotifyPlayer(
 
       player.addListener('account_error', ({ message }: { message: string }) => {
         console.error('[Spotify SDK] Account error (Premium required):', message);
-        alert('Spotify Web Playback 需要 Premium 帳號。請確認您已訂閱 Spotify Premium！');
+        if (showAlert) {
+          showAlert('Spotify Web Playback 需要 Premium 帳號。請確認您已訂閱 Spotify Premium！', '⚠️ PREMIUM REQUIRED');
+        } else {
+          alert('Spotify Web Playback 需要 Premium 帳號。請確認您已訂閱 Spotify Premium！');
+        }
       });
 
       player.connect();
@@ -300,14 +306,25 @@ export function useSpotifyPlayer(
   // Action methods
   const play = () => {
     if (!token) {
-      if (window.confirm('Spotify 連線已過期或未登入。是否現在前往「卡帶工作室」重新連接？')) {
-        onAuthError?.();
+      if (showConfirm) {
+        showConfirm('Spotify 連線已過期或未登入。是否現在前往「卡帶工作室」重新連接？', '🔌 RECONNECT SPOTIFY')
+          .then(ok => {
+            if (ok) onAuthError?.();
+          });
+      } else {
+        if (window.confirm('Spotify 連線已過期或未登入。是否現在前往「卡帶工作室」重新連接？')) {
+          onAuthError?.();
+        }
       }
       return;
     }
     if (isDeckEmpty || !playerRef.current || !deviceIdRef.current) return;
     if (!sdkReady) {
-      alert('Spotify 播放器尚未就緒，請稍候再試！');
+      if (showAlert) {
+        showAlert('Spotify 播放器尚未就緒，請稍候再試！', '⏳ PLEASE WAIT');
+      } else {
+        alert('Spotify 播放器尚未就緒，請稍候再試！');
+      }
       return;
     }
 

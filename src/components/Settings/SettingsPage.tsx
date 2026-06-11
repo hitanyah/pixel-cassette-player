@@ -16,6 +16,7 @@ interface SettingsPageProps {
   onAddCassette: (cassette: Cassette) => void;
   onDeleteCassette: (id: string) => void;
   onClearAllCassettes: () => void;
+  showAlert?: (msg: string, title?: string) => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -23,7 +24,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   cassettes,
   onAddCassette,
   onDeleteCassette,
-  onClearAllCassettes
+  onClearAllCassettes,
+  showAlert
 }) => {
   // Spotify Integration States
   const [clientId, setClientId] = useState(() => localStorage.getItem('spotify_client_id') || '');
@@ -642,7 +644,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                             const copied = await copyToClipboard(shareUrl);
 
                             if (copied) {
-                              alert(`「${tape.title}」的分享連結已複製！\n快去貼給朋友吧！`);
+                              if (showAlert) {
+                                showAlert(`「${tape.title}」的分享連結已複製！\n快去貼給朋友吧！`, '🔗 SHARE LINK COPIED');
+                              } else {
+                                alert(`「${tape.title}」的分享連結已複製！\n快去貼給朋友吧！`);
+                              }
                             } else {
                               prompt('請手動複製此連結：', shareUrl);
                             }

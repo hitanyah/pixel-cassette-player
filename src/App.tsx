@@ -7,6 +7,7 @@ import { Walkman } from './components/Walkman/Walkman';
 import { CassetteRack } from './components/CassetteRack/CassetteRack';
 import { SettingsPage } from './components/Settings/SettingsPage';
 import { exchangeCodeForToken, getRedirectUri, getStoredToken, redirectToSpotifyAuth, decompressString } from './services/spotify';
+import { PixelModal } from './components/PixelModal';
 
 function App() {
   const [page, setPage] = useState<'home' | 'settings'>('home');
@@ -14,6 +15,56 @@ function App() {
   const [isLidOpen, setLidOpen] = useState(false);
   const [currentSide, setCurrentSide] = useState<'A' | 'B'>('A');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Custom Pixel Modal State
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'alert' | 'confirm';
+    onConfirm: () => void;
+    onCancel?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert',
+    onConfirm: () => {}
+  });
+
+  const showPixelAlert = (message: string, title: string = '⚠️ SYSTEM ALERT') => {
+    return new Promise<void>((resolve) => {
+      setModalState({
+        isOpen: true,
+        title,
+        message,
+        type: 'alert',
+        onConfirm: () => {
+          setModalState(prev => ({ ...prev, isOpen: false }));
+          resolve();
+        }
+      });
+    });
+  };
+
+  const showPixelConfirm = (message: string, title: string = '💬 SYSTEM CONFIRM') => {
+    return new Promise<boolean>((resolve) => {
+      setModalState({
+        isOpen: true,
+        title,
+        message,
+        type: 'confirm',
+        onConfirm: () => {
+          setModalState(prev => ({ ...prev, isOpen: false }));
+          resolve(true);
+        },
+        onCancel: () => {
+          setModalState(prev => ({ ...prev, isOpen: false }));
+          resolve(false);
+        }
+      });
+    });
+  };
   
   // Custom cassettes loaded from local storage
   const [customCassettes, setCustomCassettes] = useState<Cassette[]>(() => {
@@ -39,8 +90,10 @@ function App() {
     localStorage.removeItem('spotify_access_token');
     localStorage.removeItem('spotify_token_expires_at');
     localStorage.removeItem('spotify_refresh_token');
-    alert('Spotify 連線已過期或授權失效。請重新連線！');
-    setPage('settings');
+    showPixelAlert('Spotify 連線已過期或授權失效。請重新連線！', '🔌 SPOTIFY AUTH ERROR')
+      .then(() => {
+        setPage('settings');
+      });
   };
 
   const localAudioEngine = useAudioPlayer(
@@ -51,7 +104,9 @@ function App() {
     activeCassette?.isSpotifyPlaylist ? activeCassette : null,
     currentSide,
     spotifyToken,
-    handleSpotifyAuthError
+    handleSpotifyAuthError,
+    showPixelAlert,
+    showPixelConfirm
   );
 
   // Route to the correct audio engine based on cassette type
@@ -94,7 +149,7 @@ function App() {
           console.error('[Spotify Auth] Token exchange FAILED:', err);
           // Clear URL query parameters even on failure
           window.history.replaceState({}, document.title, window.location.pathname);
-          alert('Spotify 登入驗證失敗！請確認 Client ID 或 Redirect URI 設定是否正確。');
+          showPixelAlert('Spotify 登入驗證失敗！請確認 Client ID 或 Redirect URI 設定是否正確。', '❌ AUTH FAILED');
         })
         .finally(() => {
           setIsAuthenticating(false);
@@ -144,18 +199,21 @@ function App() {
             window.history.replaceState({}, document.title, window.location.pathname);
             
             if (importedCassette.isSpotifyPlaylist && clientQuery && !getStoredToken()) {
-              if (window.confirm(`成功收到卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否立即使用分享者的連線設定進行登入？`)) {
-                redirectToSpotifyAuth(clientQuery, getRedirectUri());
-                return;
-              }
+              showPixelConfirm(
+                `成功收到卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否立即使用分享者的連線設定進行登入？`,
+                '📥 IMPORT SPOTIFY TAPE'
+              ).then((ok) => {
+                if (ok) redirectToSpotifyAuth(clientQuery, getRedirectUri());
+              });
+              return;
             } else {
-              alert(`成功收到並匯入朋友分享的卡帶：「${importedCassette.title}」！`);
+              showPixelAlert(`成功收到並匯入朋友分享的卡帶：「${importedCassette.title}」！`, '📥 CASSETTE IMPORTED');
             }
           }
         } catch (err) {
           console.error('Failed to parse shared cassette:', err);
           window.history.replaceState({}, document.title, window.location.pathname);
-          alert('無法匯入卡帶，分享連結可能已損壞或過期！');
+          showPixelAlert('無法匯入卡帶，分享連結可能已損壞或過期！', '❌ IMPORT ERROR');
         }
       };
 
@@ -182,27 +240,35 @@ function App() {
   };
 
   const handleClearAllCassettes = () => {
-    if (window.confirm('確定要清空所有自訂與分享的卡帶嗎？此動作無法復原。')) {
-      audioEngine.stop();
-      setCustomCassettes([]);
-      localStorage.removeItem('custom_cassettes');
-      
-      // If active cassette is a custom/shared one, eject it
-      if (activeCassette && !activeCassette.id.startsWith('default-')) {
-        setActiveCassette(null);
-      }
-      alert('所有自訂卡帶已成功清空！');
-    }
+    showPixelConfirm('確定要清空所有自訂與分享的卡帶嗎？此動作無法復原。', '🗑️ CLEAR ALL CASSETTES')
+      .then((ok) => {
+        if (ok) {
+          audioEngine.stop();
+          setCustomCassettes([]);
+          localStorage.removeItem('custom_cassettes');
+          
+          // If active cassette is a custom/shared one, eject it
+          if (activeCassette && !activeCassette.id.startsWith('default-')) {
+            setActiveCassette(null);
+          }
+          showPixelAlert('所有自訂卡帶已成功清空！', '🗑️ CLEARED');
+        }
+      });
   };
 
   // Cassette interaction events
   const handleSelectCassette = (cassette: Cassette) => {
     // Check if selecting a Spotify cassette but token is expired/null
     if (cassette.isSpotifyPlaylist && !getStoredToken()) {
-      if (window.confirm(`「${cassette.title}」是 Spotify 卡帶，但偵測到連線已過期或未登入。\n\n是否現在前往「卡帶工作室」重新連接 Spotify？`)) {
-        setPage('settings');
-        return;
-      }
+      showPixelConfirm(
+        `「${cassette.title}」是 Spotify 卡帶，但偵測到連線已過期或未登入。\n\n是否現在前往「卡帶工作室」重新連接 Spotify？`,
+        '🔌 SPOTIFY RECONNECT'
+      ).then((ok) => {
+        if (ok) {
+          setPage('settings');
+        }
+      });
+      return;
     }
 
     audioEngine.stop();
@@ -370,9 +436,18 @@ function App() {
             onAddCassette={handleAddCassette}
             onDeleteCassette={handleDeleteCassette}
             onClearAllCassettes={handleClearAllCassettes}
+            showAlert={showPixelAlert}
           />
         )}
       </div>
+      <PixelModal
+        isOpen={modalState.isOpen}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        onConfirm={modalState.onConfirm}
+        onCancel={modalState.onCancel}
+      />
     </div>
   );
 }
