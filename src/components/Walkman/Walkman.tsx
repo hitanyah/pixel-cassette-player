@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Square, RotateCcw, Volume2, Sparkles, SkipForward, SkipBack } from 'lucide-react';
 import { Cassette } from '../../services/mockData';
 import { UseAudioPlayerReturn } from '../../hooks/useAudioPlayer';
 import { DisplayScreen } from './DisplayScreen';
 import { CassetteTape } from '../Cassette/CassetteTape';
+
+const clickSound = typeof Audio !== 'undefined' ? new Audio('/pixel-cassette-player/sounds/click.mp3') : null;
+const ejectSound = typeof Audio !== 'undefined' ? new Audio('/pixel-cassette-player/sounds/eject.mp3') : null;
+const insertSound = typeof Audio !== 'undefined' ? new Audio('/pixel-cassette-player/sounds/insert.mp3') : null;
+
+// Preload audio files
+if (clickSound) clickSound.load();
+if (ejectSound) ejectSound.load();
+if (insertSound) insertSound.load();
 
 interface WalkmanProps {
   cassette: Cassette | null;
@@ -47,10 +56,25 @@ export const Walkman: React.FC<WalkmanProps> = ({
   const [isFlipping, setIsFlipping] = useState(false);
   const [isPausePressed, setIsPausePressed] = useState(false);
 
-  // Play click audio indicator (temporarily disabled)
+  // Play click audio indicator
   const playClickSound = () => {
-    // Click sound feature reverted
+    if (clickSound) {
+      clickSound.currentTime = 0;
+      clickSound.play().catch(e => console.log('Click sound play block:', e));
+    }
   };
+
+  // Play insert sound when cassette goes from null to active or changes
+  const prevCassetteRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (cassette && prevCassetteRef.current !== cassette.id) {
+      if (insertSound) {
+        insertSound.currentTime = 0;
+        insertSound.play().catch(e => console.log('Insert sound play block:', e));
+      }
+    }
+    prevCassetteRef.current = cassette ? cassette.id : null;
+  }, [cassette]);
 
   const handlePlay = () => {
     playClickSound();
@@ -96,11 +120,18 @@ export const Walkman: React.FC<WalkmanProps> = ({
 
 
   const handleEject = () => {
-    playClickSound();
     stop();
     if (isLidOpen) {
+      if (clickSound) {
+        clickSound.currentTime = 0;
+        clickSound.play().catch(e => console.log('Click sound play block:', e));
+      }
       setLidOpen(false);
     } else {
+      if (ejectSound) {
+        ejectSound.currentTime = 0;
+        ejectSound.play().catch(e => console.log('Eject sound play block:', e));
+      }
       setLidOpen(true);
       if (cassette) {
         // Eject cassette
