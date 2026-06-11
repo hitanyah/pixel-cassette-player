@@ -134,4 +134,12 @@ stateDiagram-v2
    - 當使用者因上述失效或剛匯入了一張需授權的 Spotify 卡帶而被引導到工作室時，系統會在 `CONNECT` 按鈕上方顯示一個動態跳躍（Bounce Animation）的黃底黑邊引導氣泡（`☟ 點此連線`）。
    - 該氣泡使用 CSS `border-width` 屬性構造雙層三角形，精準且無縫指向按鈕，強烈提示使用者登入，大幅降低使用者的認知負荷。
 
-
+### C. 擬真機械操作音效 (Interactive Mechanical SFX)
+為了增強實體卡帶隨身聽的「觸覺與聽覺」回饋，專案新增了三組符合 CC0 授權的互動音效，並採用本地預載與事件監聽方式實作：
+1. **靜態 Audio 物件模組化預載**：
+   - 在 `Walkman.tsx` 模組層級（非元件渲染函式內）直接實例化 `clickSound`、`ejectSound` 與 `insertSound`。
+   - 調用 `load()` 方法進行瀏覽器後台預載，確保用戶點擊按鍵時音軌無任何網絡延遲、即時發聲。
+2. **三類物理操作音效對應**：
+   - **按鈕機械音 (click.mp3)**：綁定於 PLAY, PAUSE, STOP, PREV, NEXT, FLIP 按鈕，以及闔上磁帶艙蓋（`isLidOpen` 從 true 變 false）時。
+   - **艙門彈開音 (eject.mp3)**：綁定於 EJECT 開艙動作（`isLidOpen` 從 false 變 true）時，模擬金屬彈簧與齒輪彈開的結構聲。
+   - **卡帶裝填音 (insert.mp3)**：在 `Walkman.tsx` 中使用 `useEffect` 監控 `cassette` 的傳入。當 `cassette` 從 `null` 變為有效卡帶時，播放磁帶卡入主機機芯的「磁帶滑入與鎖定」音效。
