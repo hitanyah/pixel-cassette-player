@@ -370,3 +370,203 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
 .rack-scroll-container::-webkit-scrollbar-thumb:hover {
   background: #ffdf00;
 }
+
+/* ==========================================================================
+   🎮 RETRO GAMER THEME (Arcade Cabinet & Famicom Style)
+   ========================================================================== */
+
+/* Retro Gamer Casing Casing styling override */
+.walkman-casing.theme-retro-gamer .walkman-btn {
+  background-color: #ebd4b4; /* Vintage Famicom controller cream */
+  box-shadow: 
+    inset -4px -4px 0 0 #9c8466,
+    inset 4px 4px 0 0 #ffffff,
+    0 0 0 3px #000;
+}
+
+.walkman-casing.theme-retro-gamer .walkman-btn:hover {
+  background-color: #f6ebd9;
+}
+
+.walkman-casing.theme-retro-gamer .walkman-btn.pressed {
+  background-color: #cbb494;
+  box-shadow: 
+    inset 4px 4px 0 0 #574630,
+    inset -4px -4px 0 0 #ebd4b4,
+    0 0 0 3px #000;
+}
+
+/* Custom Arcade Teal PLAY button */
+.walkman-casing.theme-retro-gamer .btn-play-custom {
+  background-color: #12a4b4 !important;
+  box-shadow: 
+    inset -4px -4px 0 0 #075c66,
+    inset 4px 4px 0 0 #7bf2ff,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-retro-gamer .btn-play-custom:hover {
+  background-color: #1ebcd0 !important;
+}
+
+.walkman-casing.theme-retro-gamer .btn-play-custom.pressed {
+  background-color: #0b737e !important;
+  box-shadow: 
+    inset 4px 4px 0 0 #03363b,
+    inset -4px -4px 0 0 #12a4b4,
+    0 0 0 3px #000 !important;
+}
+
+/* Custom Arcade Red STOP button */
+.walkman-casing.theme-retro-gamer .btn-stop-custom {
+  background-color: #d84545 !important;
+  box-shadow: 
+    inset -4px -4px 0 0 #7c1a1a,
+    inset 4px 4px 0 0 #ff9999,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-retro-gamer .btn-stop-custom:hover {
+  background-color: #eb5c5c !important;
+}
+
+.walkman-casing.theme-retro-gamer .btn-stop-custom.pressed {
+  background-color: #9f2b2b !important;
+  box-shadow: 
+    inset 4px 4px 0 0 #4c0f0f,
+    inset -4px -4px 0 0 #d84545,
+    0 0 0 3px #000 !important;
+}
+
+/* ==========================================================================
+   💛 GAME BOY YELLOW THEME (Classic Handheld Style)
+   ========================================================================== */
+
+/* Game Boy Casing buttons styling override */
+.walkman-casing.theme-gameboy-yellow .walkman-btn {
+  background-color: #303030; /* Charcoal grey buttons */
+  box-shadow: 
+    inset -4px -4px 0 0 #151515,
+    inset 4px 4px 0 0 #555555,
+    0 0 0 3px #000;
+}
+
+.walkman-casing.theme-gameboy-yellow .walkman-btn:hover {
+  background-color: #404040;
+}
+
+.walkman-casing.theme-gameboy-yellow .walkman-btn.pressed {
+  background-color: #202020;
+  box-shadow: 
+    inset 4px 4px 0 0 #050505,
+    inset -4px -4px 0 0 #303030,
+    0 0 0 3px #000;
+}
+
+/* Custom Burgundy Red A/B style buttons for PLAY and STOP */
+.walkman-casing.theme-gameboy-yellow .btn-play-custom {
+  background-color: #a81030 !important; /* Burgundy Red */
+  box-shadow: 
+    inset -4px -4px 0 0 #5a0515,
+    inset 4px 4px 0 0 #e04060,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-gameboy-yellow .btn-play-custom:hover {
+  background-color: #b81c3c !important;
+}
+
+.walkman-casing.theme-gameboy-yellow .btn-play-custom.pressed {
+  background-color: #7a0820 !important;
+  box-shadow: 
+    inset 4px 4px 0 0 #3a0008,
+    inset -4px -4px 0 0 #a81030,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-gameboy-yellow .btn-stop-custom {
+  background-color: #a81030 !important; /* Burgundy Red */
+  box-shadow: 
+    inset -4px -4px 0 0 #5a0515,
+    inset 4px 4px 0 0 #e04060,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-gameboy-yellow .btn-stop-custom:hover {
+  background-color: #b81c3c !important;
+}
+
+.walkman-casing.theme-gameboy-yellow .btn-stop-custom.pressed {
+  background-color: #7a0820 !important;
+  box-shadow: 
+    inset 4px 4px 0 0 #3a0008,
+    inset -4px -4px 0 0 #a81030,
+    0 0 0 3px #000 !important;
+}
+
+
+
+/* ==========================================================================
+   ⚡ CYBERPUNK THEME (Neon Overdrive)
+   ========================================================================== */
+
+.walkman-casing.theme-cyberpunk .walkman-btn {
+  background-color: #111; /* Dark buttons */
+  box-shadow: 
+    inset -4px -4px 0 0 #000,
+    inset 4px 4px 0 0 #333,
+    0 0 0 3px #000;
+}
+
+.walkman-casing.theme-cyberpunk .walkman-btn:hover {
+  background-color: #222;
+}
+
+.walkman-casing.theme-cyberpunk .walkman-btn.pressed {
+  background-color: #050505;
+  box-shadow: 
+    inset 4px 4px 0 0 #000,
+    inset -4px -4px 0 0 #111,
+    0 0 0 3px #000;
+}
+
+/* Custom Neon Pink style buttons for PLAY and STOP */
+.walkman-casing.theme-cyberpunk .btn-play-custom {
+  background-color: #ff003c !important; /* Neon Pink */
+  box-shadow: 
+    inset -4px -4px 0 0 #80001e,
+    inset 4px 4px 0 0 #ff6685,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-cyberpunk .btn-play-custom:hover {
+  background-color: #ff3366 !important;
+}
+
+.walkman-casing.theme-cyberpunk .btn-play-custom.pressed {
+  background-color: #b3002a !important;
+  box-shadow: 
+    inset 4px 4px 0 0 #4d0012,
+    inset -4px -4px 0 0 #ff003c,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-cyberpunk .btn-stop-custom {
+  background-color: #00f3ff !important; /* Neon Cyan */
+  box-shadow: 
+    inset -4px -4px 0 0 #007980,
+    inset 4px 4px 0 0 #66f8ff,
+    0 0 0 3px #000 !important;
+}
+
+.walkman-casing.theme-cyberpunk .btn-stop-custom:hover {
+  background-color: #33f5ff !important;
+}
+
+.walkman-casing.theme-cyberpunk .btn-stop-custom.pressed {
+  background-color: #00a8b3 !important;
+  box-shadow: 
+    inset 4px 4px 0 0 #004b50,
+    inset -4px -4px 0 0 #00f3ff,
+    0 0 0 3px #000 !important;
+}

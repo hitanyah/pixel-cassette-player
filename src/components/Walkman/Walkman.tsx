@@ -24,6 +24,7 @@ interface WalkmanProps {
   setLidOpen: (open: boolean) => void;
   crtFilterOn: boolean;
   setCrtFilterOn: (on: boolean) => void;
+  theme?: 'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk';
 }
 
 export const Walkman: React.FC<WalkmanProps> = ({
@@ -35,7 +36,8 @@ export const Walkman: React.FC<WalkmanProps> = ({
   isLidOpen,
   setLidOpen,
   crtFilterOn,
-  setCrtFilterOn
+  setCrtFilterOn,
+  theme = 'classic'
 }) => {
   const {
     isPlaying,
@@ -158,18 +160,36 @@ export const Walkman: React.FC<WalkmanProps> = ({
 
   return (
     <div 
-      className="pixel-box-outset walkman-casing"
+      className={`pixel-box-outset walkman-casing theme-${theme}`}
       style={{
         width: '100%',
         maxWidth: '360px',
-        backgroundColor: '#383c48', // Classic Walkman Metallic Blue-Gray
+        backgroundColor: theme === 'retro-gamer' ? '#c23631' : theme === 'gameboy-yellow' ? '#f3c23c' : theme === 'cyberpunk' ? '#10091b' : '#383c48', // Classic Blue-Gray, Arcade Red, or Game Boy Yellow
         padding: '24px 20px',
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
         borderWidth: '4px',
         userSelect: 'none',
-        boxShadow: `
+        boxShadow: theme === 'retro-gamer' ? `
+          inset -4px -4px 0 0 #4d1210,
+          inset 4px 4px 0 0 #ec7063,
+          inset -8px -8px 0 0 #6c1e1c,
+          inset 8px 8px 0 0 #f1948a,
+          0 12px 0 0 rgba(0,0,0,0.4)
+        ` : theme === 'gameboy-yellow' ? `
+          inset -4px -4px 0 0 #b38200,
+          inset 4px 4px 0 0 #fce475,
+          inset -8px -8px 0 0 #856100,
+          inset 8px 8px 0 0 #fff1b0,
+          0 12px 0 0 rgba(0,0,0,0.3)
+        ` : theme === 'cyberpunk' ? `
+          inset -4px -4px 0 0 #ff003c,
+          inset 4px 4px 0 0 #00f3ff,
+          inset -8px -8px 0 0 #80001e,
+          inset 8px 8px 0 0 #007980,
+          0 12px 0 0 rgba(0,0,0,0.5)
+        ` : `
           inset -4px -4px 0 0 #1e2027,
           inset 4px 4px 0 0 #60677a,
           inset -8px -8px 0 0 #2b2e37,
@@ -179,33 +199,39 @@ export const Walkman: React.FC<WalkmanProps> = ({
       }}
     >
       {/* Top Walkman Logo & LED Lights */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #1e2027', paddingBottom: '8px' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        borderBottom: theme === 'retro-gamer' ? '3px solid #4d1210' : theme === 'gameboy-yellow' ? '3px solid #b38200' : theme === 'cyberpunk' ? '3px solid #ff003c' : '3px solid #1e2027', 
+        paddingBottom: '8px' 
+      }}>
         <div>
           <span 
             className="font-pixel" 
             style={{ 
               fontSize: '14px', 
-              color: '#dcdde1', 
+              color: theme === 'gameboy-yellow' ? '#303030' : theme === 'retro-gamer' ? '#ffdf00' : theme === 'cyberpunk' ? '#00f3ff' : '#dcdde1', // Dark charcoal, arcade yellow, or silver
               fontWeight: '900', 
               letterSpacing: '1px',
-              textShadow: '2px 2px 0 #1e2027'
+              textShadow: theme === 'gameboy-yellow' ? '2px 2px 0 #fce475' : theme === 'retro-gamer' ? '2px 2px 0 #4d1210' : theme === 'cyberpunk' ? '2px 2px 0 #ff003c' : '2px 2px 0 #1e2027'
             }}
           >
-            SOUND-PIXEL
+            {theme === 'retro-gamer' ? '★ RETRO-GAME' : theme === 'gameboy-yellow' ? '★ GAME BOY' : theme === 'cyberpunk' ? '⚡ CYBER PUNK' : 'SOUND-PIXEL'}
           </span>
-          <div style={{ fontSize: '8px', fontFamily: 'var(--font-pixel)', color: '#00f3ff', marginTop: '2px' }}>
-            AUTO REVERSE SYSTEM
+          <div style={{ fontSize: '8px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' ? '#303030' : theme === 'retro-gamer' ? '#39ff14' : theme === 'cyberpunk' ? '#ff003c' : '#00f3ff', marginTop: '2px' }}>
+            {theme === 'retro-gamer' ? 'ARCADE STATION' : theme === 'gameboy-yellow' ? '8-BIT CLASSIC' : theme === 'cyberpunk' ? 'NEON OVERDRIVE' : 'AUTO REVERSE SYSTEM'}
           </div>
         </div>
-
+ 
         {/* LED Block */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-            <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#a0a0ab' }}>PLAY</span>
+            <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' ? '#303030' : theme === 'retro-gamer' ? '#fbf2c0' : theme === 'cyberpunk' ? '#00f3ff' : '#a0a0ab' }}>PLAY</span>
             <div className={`led green ${isPlaying ? 'on' : ''}`} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#888', marginBottom: '4px' }}>BATT</span>
+            <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' ? '#303030' : theme === 'retro-gamer' ? '#8c3531' : theme === 'cyberpunk' ? '#ff003c' : '#888', marginBottom: '4px' }}>BATT</span>
             <div className={`led red`} />
           </div>
         </div>
@@ -221,6 +247,7 @@ export const Walkman: React.FC<WalkmanProps> = ({
         isSpotifyStream={!!cassette?.isSpotifyPlaylist}
         hasFinishedSide={hasFinishedSide}
         isSpotifyDisconnected={isSpotifyDisconnected}
+        theme={theme}
       />
 
       {/* Cassette Tape Deck Compartment */}
@@ -229,7 +256,7 @@ export const Walkman: React.FC<WalkmanProps> = ({
         style={{
           height: '210px',
           width: '100%',
-          backgroundColor: '#151619',
+          backgroundColor: theme === 'gameboy-yellow' ? '#151515' : theme === 'retro-gamer' ? '#111318' : theme === 'cyberpunk' ? '#09050d' : '#151619',
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
@@ -313,8 +340,8 @@ export const Walkman: React.FC<WalkmanProps> = ({
             left: 0,
             width: '100%',
             height: '100%',
-            border: '4px solid #111',
-            backgroundColor: isLidOpen ? 'rgba(0,0,0,0.0)' : 'rgba(30,35,45,0.45)',
+            border: theme === 'gameboy-yellow' ? '4px solid #b38200' : theme === 'retro-gamer' ? '4px solid #4d1210' : theme === 'cyberpunk' ? '4px solid #ff003c' : '4px solid #111',
+            backgroundColor: isLidOpen ? 'rgba(0,0,0,0.0)' : theme === 'gameboy-yellow' ? 'rgba(179,130,0,0.15)' : theme === 'retro-gamer' ? 'rgba(77,18,16,0.25)' : theme === 'cyberpunk' ? 'rgba(255,0,60,0.15)' : 'rgba(30,35,45,0.45)',
             boxShadow: isLidOpen 
               ? 'none' 
               : 'inset -8px -8px 0 0 rgba(0,0,0,0.4), inset 8px 8px 0 0 rgba(255,255,255,0.05)',
@@ -347,7 +374,7 @@ export const Walkman: React.FC<WalkmanProps> = ({
               transform: 'translateX(-50%)',
               width: '146px',
               height: '66px',
-              border: '3px solid #1e2027',
+              border: theme === 'gameboy-yellow' ? '3px solid #b38200' : theme === 'retro-gamer' ? '3px solid #4d1210' : '3px solid #1e2027',
               backgroundColor: 'rgba(0,0,0,0.15)',
               boxShadow: 'inset 2px 2px 4px rgba(0,0,0,0.5)',
               display: isLidOpen ? 'none' : 'block'
@@ -362,7 +389,7 @@ export const Walkman: React.FC<WalkmanProps> = ({
               bottom: '12px', 
               left: '16px', 
               fontSize: '8px', 
-              color: '#dcdde1',
+              color: theme === 'gameboy-yellow' ? '#303030' : theme === 'retro-gamer' ? '#ffdf00' : theme === 'cyberpunk' ? '#00f3ff' : '#dcdde1',
               textShadow: '1px 1px 0 #000',
               opacity: isLidOpen ? 0 : 0.7
             }}
@@ -376,9 +403,9 @@ export const Walkman: React.FC<WalkmanProps> = ({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
         {/* Volume Slider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-          <Volume2 size={16} color="#dcdde1" />
+          <Volume2 size={16} color={theme === 'gameboy-yellow' ? '#303030' : theme === 'retro-gamer' ? '#ffdf00' : theme === 'cyberpunk' ? '#00f3ff' : '#dcdde1'} />
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <span style={{ fontSize: '8px', fontFamily: 'var(--font-pixel)', color: '#a0a0ab', marginBottom: '2px' }}>
+            <span style={{ fontSize: '8px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' ? '#303030' : theme === 'retro-gamer' ? '#fbf2c0' : theme === 'cyberpunk' ? '#00f3ff' : '#a0a0ab', marginBottom: '2px' }}>
               VOLUME ({Math.round(volume * 10)})
             </span>
             <input 
@@ -420,9 +447,9 @@ export const Walkman: React.FC<WalkmanProps> = ({
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'flex-start',
-          backgroundColor: '#23252d',
+          backgroundColor: theme === 'gameboy-yellow' ? '#222222' : theme === 'retro-gamer' ? '#1a1b20' : theme === 'cyberpunk' ? '#1b0f2e' : '#23252d',
           padding: '12px 8px 6px 8px',
-          border: '3px solid #1e2027',
+          border: theme === 'gameboy-yellow' ? '3px solid #b38200' : theme === 'retro-gamer' ? '3px solid #4d1210' : '3px solid #1e2027',
           boxShadow: 'inset 0 4px 6px rgba(0,0,0,0.6)',
           height: '80px',
           marginTop: '4px'
@@ -430,12 +457,12 @@ export const Walkman: React.FC<WalkmanProps> = ({
       >
         <button 
           title="Play"
-          className={`walkman-btn ${isPlaying ? 'pressed' : ''}`}
+          className={`walkman-btn btn-play-custom ${isPlaying ? 'pressed' : ''}`}
           onClick={handlePlay}
           disabled={isDeckEmpty}
         >
-          <Play size={12} fill="#000" />
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>PLAY</span>
+          <Play size={12} fill={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} color={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000', marginTop: '4px', fontWeight: 'bold' }}>PLAY</span>
         </button>
 
         <button 
@@ -444,8 +471,8 @@ export const Walkman: React.FC<WalkmanProps> = ({
           onClick={handlePause}
           disabled={isDeckEmpty}
         >
-          <Pause size={12} fill="#000" />
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>PAUSE</span>
+          <Pause size={12} fill={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} color={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000', marginTop: '4px', fontWeight: 'bold' }}>PAUSE</span>
         </button>
 
         {/* PREV Button */}
@@ -455,8 +482,8 @@ export const Walkman: React.FC<WalkmanProps> = ({
           onClick={handlePrev}
           title="Previous Track"
         >
-          <SkipBack size={12} fill="#000" />
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>PREV</span>
+          <SkipBack size={12} fill={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} color={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000', marginTop: '4px', fontWeight: 'bold' }}>PREV</span>
         </button>
         
         {/* NEXT Button */}
@@ -466,18 +493,18 @@ export const Walkman: React.FC<WalkmanProps> = ({
           onClick={handleNext}
           title="Next Track"
         >
-          <SkipForward size={12} fill="#000" />
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>NEXT</span>
+          <SkipForward size={12} fill={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} color={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000', marginTop: '4px', fontWeight: 'bold' }}>NEXT</span>
         </button>
 
         <button 
           title="Stop"
-          className={`walkman-btn ${!isPlaying && sideTime === 0 ? 'pressed' : ''}`}
+          className={`walkman-btn btn-stop-custom ${!isPlaying && sideTime === 0 ? 'pressed' : ''}`}
           onClick={handleStop}
           disabled={isDeckEmpty}
         >
-          <Square size={12} fill="#000" />
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>STOP</span>
+          <Square size={12} fill={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} color={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000', marginTop: '4px', fontWeight: 'bold' }}>STOP</span>
         </button>
 
         <button 
@@ -485,8 +512,8 @@ export const Walkman: React.FC<WalkmanProps> = ({
           className={`walkman-btn ${isLidOpen ? 'pressed' : ''}`}
           onClick={handleEject}
         >
-          <RotateCcw size={12} />
-          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: '#000', marginTop: '4px', fontWeight: 'bold' }}>EJECT</span>
+          <RotateCcw size={12} color={theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000'} />
+          <span style={{ fontSize: '7px', fontFamily: 'var(--font-pixel)', color: theme === 'gameboy-yellow' || theme === 'cyberpunk' ? '#fff' : '#000', marginTop: '4px', fontWeight: 'bold' }}>EJECT</span>
         </button>
       </div>
 

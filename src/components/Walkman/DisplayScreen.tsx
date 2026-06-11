@@ -11,6 +11,7 @@ interface DisplayScreenProps {
   isSpotifyStream?: boolean;
   hasFinishedSide?: boolean;
   isSpotifyDisconnected?: boolean;
+  theme?: 'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk';
 }
 
 export const DisplayScreen: React.FC<DisplayScreenProps> = ({
@@ -21,7 +22,8 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
   currentSide,
   isSpotifyStream = false,
   hasFinishedSide = false,
-  isSpotifyDisconnected = false
+  isSpotifyDisconnected = false,
+  theme = 'classic'
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -48,7 +50,7 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
       animationRef.current = requestAnimationFrame(draw);
 
       // Clear canvas
-      ctx.fillStyle = '#030a05'; // very dark matrix green
+      ctx.fillStyle = theme === 'retro-gamer' ? '#071013' : theme === 'gameboy-yellow' ? '#8b956d' : theme === 'cyberpunk' ? '#1a0528' : '#030a05'; // dark matrix cyan, Game Boy green-yellow, or dark green
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (analyser && isPlaying) {
@@ -93,10 +95,10 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
           const y = canvas.height - 2 - j * (blockHeight + blockGap) - blockHeight;
           const x = startX + i * (barWidth + barGap);
 
-          // Color shifts as it goes higher (green -> yellow -> red)
-          let fillStyle = '#39ff14'; // Led Green
-          if (j > 5) fillStyle = '#ffdf00'; // Yellow
-          if (j > 8) fillStyle = '#ff3b30'; // Red
+          // Color shifts as it goes higher (cyan/green -> yellow -> red/pink)
+          let fillStyle = theme === 'retro-gamer' ? '#00f3ff' : theme === 'gameboy-yellow' ? '#0f380f' : theme === 'cyberpunk' ? '#00f3ff' : '#39ff14'; // Led Cyan, dark green, or Green
+          if (j > 5) fillStyle = theme === 'gameboy-yellow' ? '#306230' : theme === 'cyberpunk' ? '#9d00ff' : '#ffdf00'; // Medium green or Yellow
+          if (j > 8) fillStyle = theme === 'retro-gamer' ? '#ff5b5b' : theme === 'gameboy-yellow' ? '#8bac0f' : theme === 'cyberpunk' ? '#ff003c' : '#ff3b30'; // Red/Pink, light green, or Red
 
           ctx.fillStyle = fillStyle;
           ctx.fillRect(x, y, barWidth, blockHeight);
@@ -111,13 +113,13 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPlaying, analyser]);
+  }, [isPlaying, analyser, theme]);
 
   return (
     <div 
       className="crt-container pixel-box-inset"
       style={{
-        backgroundColor: '#030a05',
+        backgroundColor: theme === 'retro-gamer' ? '#071013' : theme === 'gameboy-yellow' ? '#8b956d' : theme === 'cyberpunk' ? '#1a0528' : '#030a05',
         height: '80px',
         width: '100%',
         padding: '8px 12px',
@@ -131,7 +133,14 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
         {/* LCD Info Left (Time & Playback status) */}
         <div style={{ flex: '1.2', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           {/* Top Line: Mode Indicator */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', fontFamily: 'var(--font-pixel)', color: isSpotifyDisconnected ? '#ff3b30' : '#39ff14', opacity: 0.8 }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            fontSize: '9px', 
+            fontFamily: 'var(--font-pixel)', 
+            color: isSpotifyDisconnected ? '#ff3b30' : theme === 'retro-gamer' ? '#00f3ff' : theme === 'gameboy-yellow' ? '#0f380f' : theme === 'cyberpunk' ? '#00f3ff' : '#39ff14', 
+            opacity: 0.8 
+          }}>
             <span>SIDE {currentSide}</span>
             <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
               {isSpotifyStream && (
@@ -148,10 +157,16 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
             className="font-lcd" 
             style={{ 
               fontSize: isSpotifyDisconnected ? '28px' : '36px', 
-              color: isSpotifyDisconnected ? '#ff3b30' : '#39ff14', 
+              color: isSpotifyDisconnected ? '#ff3b30' : theme === 'retro-gamer' ? '#00f3ff' : theme === 'gameboy-yellow' ? '#0f380f' : theme === 'cyberpunk' ? '#00f3ff' : '#39ff14', 
               lineHeight: '1', 
               marginTop: '4px',
-              textShadow: isSpotifyDisconnected ? '0 0 6px rgba(255,59,48,0.5)' : '0 0 6px rgba(57,255,20,0.5)',
+              textShadow: isSpotifyDisconnected 
+                ? '0 0 6px rgba(255,59,48,0.5)' 
+                : theme === 'retro-gamer' || theme === 'cyberpunk' 
+                  ? '0 0 6px rgba(0,243,255,0.5)' 
+                  : theme === 'gameboy-yellow'
+                    ? 'none'
+                    : '0 0 6px rgba(57,255,20,0.5)',
               letterSpacing: '1px'
             }}
           >
@@ -168,8 +183,14 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
               whiteSpace: 'nowrap', 
               fontSize: '8px', 
               fontFamily: 'var(--font-pixel)', 
-              color: isSpotifyDisconnected ? '#ff3b30' : '#39ff14',
-              backgroundColor: isSpotifyDisconnected ? 'rgba(255,59,48,0.1)' : 'rgba(57,255,20,0.1)',
+              color: isSpotifyDisconnected ? '#ff3b30' : theme === 'retro-gamer' ? '#00f3ff' : theme === 'gameboy-yellow' ? '#0f380f' : theme === 'cyberpunk' ? '#00f3ff' : '#39ff14',
+              backgroundColor: isSpotifyDisconnected 
+                ? 'rgba(255,59,48,0.1)' 
+                : theme === 'retro-gamer' || theme === 'cyberpunk' 
+                  ? 'rgba(0,243,255,0.1)' 
+                  : theme === 'gameboy-yellow'
+                    ? 'rgba(15,56,15,0.15)'
+                    : 'rgba(57,255,20,0.1)',
               padding: '2px 4px',
               height: '14px',
               display: 'flex',
@@ -194,7 +215,7 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
                 style={{ 
                   animation: hasFinishedSide ? 'blink 1s step-end infinite' : 'marquee 10s linear infinite',
                   whiteSpace: 'nowrap',
-                  color: hasFinishedSide ? '#ffdf00' : '#39ff14'
+                  color: hasFinishedSide ? (theme === 'gameboy-yellow' ? '#306230' : '#ffdf00') : theme === 'retro-gamer' ? '#00f3ff' : theme === 'gameboy-yellow' ? '#0f380f' : theme === 'cyberpunk' ? '#00f3ff' : '#39ff14'
                 }}
               >
                 {hasFinishedSide ? 'END OF TAPE - PRESS FLIP (⟳) TO CONTINUE' : `${activeTrack.title} - ${activeTrack.artist}`}
@@ -213,7 +234,7 @@ export const DisplayScreen: React.FC<DisplayScreenProps> = ({
               width: '100%', 
               height: '42px',
               display: 'block',
-              border: '1px solid rgba(57,255,20,0.2)',
+              border: theme === 'retro-gamer' || theme === 'cyberpunk' ? '1px solid rgba(0,243,255,0.2)' : theme === 'gameboy-yellow' ? '1px solid rgba(15,56,15,0.25)' : '1px solid rgba(57,255,20,0.2)',
               marginTop: '2px'
             }} 
           />

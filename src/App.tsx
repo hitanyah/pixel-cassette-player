@@ -17,6 +17,17 @@ function App() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [highlightSpotifyConnect, setHighlightSpotifyConnect] = useState(false);
 
+  // Walkman Casing Theme state (persisted in localStorage)
+  const [theme, setTheme] = useState<'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk'>(() => {
+    const stored = localStorage.getItem('walkman_theme');
+    return (stored as 'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk') || 'classic';
+  });
+
+  const handleSetTheme = (newTheme: 'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk') => {
+    setTheme(newTheme);
+    localStorage.setItem('walkman_theme', newTheme);
+  };
+
   // Custom Pixel Modal State
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -406,6 +417,7 @@ function App() {
                     setLidOpen={setLidOpen}
                     crtFilterOn={crtFilterOn}
                     setCrtFilterOn={setCrtFilterOn}
+                    theme={theme}
                   />
                 </div>
 
@@ -435,6 +447,88 @@ function App() {
                     <Settings size={16} />
                     進入卡帶工作室 (ENTER TAPE STUDIO)
                   </button>
+
+                  {/* Casing Theme Selector */}
+                  <div 
+                    className="pixel-box-inset font-retro" 
+                    style={{ 
+                      backgroundColor: '#1b1b1f', 
+                      padding: '12px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '8px' 
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', color: '#ffdf00', fontWeight: 'bold', fontSize: '11px' }}>
+                      🎨 主機外殼主題 (WALKMAN CASING THEME)
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className={`pixel-btn ${theme === 'classic' ? 'active' : ''}`}
+                        onClick={() => handleSetTheme('classic')}
+                        style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          fontSize: '9px',
+                          backgroundColor: theme === 'classic' ? '#383c48' : '#32353d',
+                          color: '#fff',
+                          boxShadow: theme === 'classic' 
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #60677a, 0 0 0 2px #000' 
+                            : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
+                        }}
+                      >
+                        CLASSIC BLUE
+                      </button>
+                      <button
+                        className={`pixel-btn ${theme === 'retro-gamer' ? 'active' : ''}`}
+                        onClick={() => handleSetTheme('retro-gamer')}
+                        style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          fontSize: '9px',
+                          backgroundColor: theme === 'retro-gamer' ? '#c23631' : '#32353d',
+                          color: '#fff',
+                          boxShadow: theme === 'retro-gamer' 
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ec7063, 0 0 0 2px #000' 
+                            : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
+                        }}
+                      >
+                        🕹️ RETRO GAMER
+                      </button>
+                      <button
+                        className={`pixel-btn ${theme === 'gameboy-yellow' ? 'active' : ''}`}
+                        onClick={() => handleSetTheme('gameboy-yellow')}
+                        style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          fontSize: '9px',
+                          backgroundColor: theme === 'gameboy-yellow' ? '#ffd300' : '#32353d',
+                          color: theme === 'gameboy-yellow' ? '#000' : '#fff',
+                          boxShadow: theme === 'gameboy-yellow' 
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ffe082, 0 0 0 2px #000' 
+                            : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
+                        }}
+                      >
+                        💛 GAME BOY
+                      </button>
+                      <button
+                        className={`pixel-btn ${theme === 'cyberpunk' ? 'active' : ''}`}
+                        onClick={() => handleSetTheme('cyberpunk')}
+                        style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          fontSize: '9px',
+                          backgroundColor: theme === 'cyberpunk' ? '#ff003c' : '#32353d',
+                          color: '#fff',
+                          boxShadow: theme === 'cyberpunk' 
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ff6685, 0 0 0 2px #000' 
+                            : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
+                        }}
+                      >
+                        ⚡ CYBERPUNK
+                      </button>
+                    </div>
+                  </div>
 
                   {/* Helper Tips Box */}
                   <div 
