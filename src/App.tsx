@@ -41,7 +41,7 @@ function App() {
     title: '',
     message: '',
     type: 'alert',
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   const showPixelAlert = (message: string, title: string = '⚠️ SYSTEM ALERT') => {
@@ -77,7 +77,7 @@ function App() {
       });
     });
   };
-  
+
   // Custom cassettes loaded from local storage
   const [customCassettes, setCustomCassettes] = useState<Cassette[]>(() => {
     const stored = localStorage.getItem('custom_cassettes');
@@ -172,7 +172,7 @@ function App() {
     // Handle incoming shared cassette
     const tapeQuery = params.get('tape');
     const clientQuery = params.get('client_id');
-    
+
     if (clientQuery) {
       localStorage.setItem('spotify_client_id', clientQuery);
     }
@@ -194,23 +194,23 @@ function App() {
           }
 
           const importedCassette = JSON.parse(decodedString) as Cassette;
-          
+
           // Ensure it has a valid ID and isn't completely bogus
           if (importedCassette && importedCassette.title && importedCassette.tracks) {
             // Add a prefix to ensure uniqueness
             importedCassette.id = `shared-${Date.now()}`;
-            
+
             setCustomCassettes(prev => {
               const updated = [...prev, importedCassette];
               localStorage.setItem('custom_cassettes', JSON.stringify(updated));
               return updated;
             });
-            
+
             setActiveCassette(importedCassette);
-            
+
             // Clear the URL parameter so it doesn't trigger again on refresh
             window.history.replaceState({}, document.title, window.location.pathname);
-            
+
             if (importedCassette.isSpotifyPlaylist && !getStoredToken()) {
               if (clientQuery) {
                 showPixelConfirm(
@@ -290,7 +290,7 @@ function App() {
           audioEngine.stop();
           setCustomCassettes([]);
           localStorage.removeItem('custom_cassettes');
-          
+
           // If active cassette is a custom/shared one, eject it
           if (activeCassette && !activeCassette.id.startsWith('default-')) {
             setActiveCassette(null);
@@ -323,7 +323,7 @@ function App() {
     setTimeout(() => {
       setActiveCassette(cassette);
       setCurrentSide('A');
-      
+
       // Auto close lid
       setTimeout(() => {
         setLidOpen(false);
@@ -344,7 +344,7 @@ function App() {
 
   if (isAuthenticating) {
     return (
-      <div 
+      <div
         className="crt-container pixel-box-inset"
         style={{
           width: '100vw',
@@ -372,28 +372,28 @@ function App() {
 
   return (
     <>
-      <div 
-        className={crtFilterOn ? 'crt-container' : ''} 
-        style={{ 
-          width: '100%', 
-          minHeight: '100vh', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
+      <div
+        className={crtFilterOn ? 'crt-container' : ''}
+        style={{
+          width: '100%',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           padding: '24px 12px'
         }}
       >
         <div className={crtFilterOn ? 'crt-screen' : ''} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          
+
           {page === 'home' ? (
             <>
               {/* Header */}
               <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <h1 
-                  className="font-pixel" 
-                  style={{ 
-                    fontSize: '20px', 
-                    color: '#ffdf00', 
+                <h1
+                  className="font-pixel"
+                  style={{
+                    fontSize: '20px',
+                    color: '#ffdf00',
                     textShadow: '3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000',
                     letterSpacing: '1px',
                     marginBottom: '10px'
@@ -449,14 +449,14 @@ function App() {
                   </button>
 
                   {/* Casing Theme Selector */}
-                  <div 
-                    className="pixel-box-inset font-retro" 
-                    style={{ 
-                      backgroundColor: '#1b1b1f', 
-                      padding: '12px', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: '8px' 
+                  <div
+                    className="pixel-box-inset font-retro"
+                    style={{
+                      backgroundColor: '#1b1b1f',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
                     }}
                   >
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'center', color: '#ffdf00', fontWeight: 'bold', fontSize: '11px' }}>
@@ -472,8 +472,8 @@ function App() {
                           fontSize: '9px',
                           backgroundColor: theme === 'classic' ? '#383c48' : '#32353d',
                           color: '#fff',
-                          boxShadow: theme === 'classic' 
-                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #60677a, 0 0 0 2px #000' 
+                          boxShadow: theme === 'classic'
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #60677a, 0 0 0 2px #000'
                             : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
                         }}
                       >
@@ -488,8 +488,8 @@ function App() {
                           fontSize: '9px',
                           backgroundColor: theme === 'retro-gamer' ? '#c23631' : '#32353d',
                           color: '#fff',
-                          boxShadow: theme === 'retro-gamer' 
-                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ec7063, 0 0 0 2px #000' 
+                          boxShadow: theme === 'retro-gamer'
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ec7063, 0 0 0 2px #000'
                             : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
                         }}
                       >
@@ -504,38 +504,38 @@ function App() {
                           fontSize: '9px',
                           backgroundColor: theme === 'gameboy-yellow' ? '#ffd300' : '#32353d',
                           color: theme === 'gameboy-yellow' ? '#000' : '#fff',
-                          boxShadow: theme === 'gameboy-yellow' 
-                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ffe082, 0 0 0 2px #000' 
+                          boxShadow: theme === 'gameboy-yellow'
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ffe082, 0 0 0 2px #000'
                             : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
                         }}
                       >
                         💛 GAME BOY
                       </button>
-                      <button
+                      {/* <button
                         className={`pixel-btn ${theme === 'cyberpunk' ? 'active' : ''}`}
                         onClick={() => handleSetTheme('cyberpunk')}
                         style={{
                           flex: 1,
                           padding: '6px 8px',
                           fontSize: '9px',
-                          backgroundColor: theme === 'cyberpunk' ? '#ff003c' : '#32353d',
+                          backgroundColor: theme === 'cyberpunk' ? '#F715AB' : '#32353d',
                           color: '#fff',
                           boxShadow: theme === 'cyberpunk' 
-                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ff6685, 0 0 0 2px #000' 
+                            ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ff7cd2, 0 0 0 2px #000' 
                             : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
                         }}
                       >
                         ⚡ CYBERPUNK
-                      </button>
+                      </button> */}
                     </div>
                   </div>
 
                   {/* Helper Tips Box */}
-                  <div 
+                  <div
                     className="pixel-box-inset font-retro"
-                    style={{ 
-                      fontSize: '12px', 
-                      color: '#a0a0ab', 
+                    style={{
+                      fontSize: '12px',
+                      color: '#a0a0ab',
                       padding: '12px',
                       lineHeight: '1.5',
                       backgroundColor: '#1b1b1f'
@@ -545,12 +545,12 @@ function App() {
                       <HelpCircle size={14} />
                       操作指南 (WALKTHROUGH)
                     </div>
-                    1. 點擊卡帶架上的卡帶放入隨身聽。<br/>
-                    2. 點擊 <strong>PLAY</strong> 播放，齒輪將轉動並顯示音樂波形。<br/>
-                    3. 可點擊 <strong>NEXT</strong>/<strong>PREV</strong> 切換上一首與下一首。<br/>
-                    4. A 面播完會自動停止，請點擊黃色按鈕進行 <strong>翻面</strong>。<br/>
+                    1. 點擊卡帶架上的卡帶放入隨身聽。<br />
+                    2. 點擊 <strong>PLAY</strong> 播放，齒輪將轉動並顯示音樂波形。<br />
+                    3. 可點擊 <strong>NEXT</strong>/<strong>PREV</strong> 切換上一首與下一首。<br />
+                    4. A 面播完會自動停止，請點擊黃色按鈕進行 <strong>翻面</strong>。<br />
                     5. 前往「卡帶工作室」可自訂卡帶配色並匯入 Spotify 歌單！
-                    
+
                     <div style={{ marginTop: '12px', fontSize: '10px', textAlign: 'right', opacity: 0.5, color: '#a0a0ab' }}>
                       v1.0.0 | by TanyaH
                     </div>
