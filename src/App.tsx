@@ -200,14 +200,37 @@ function App() {
             // Clear the URL parameter so it doesn't trigger again on refresh
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            if (importedCassette.isSpotifyPlaylist && clientQuery && !getStoredToken()) {
-              showPixelConfirm(
-                `成功收到卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否立即使用分享者的連線設定進行登入？`,
-                '📥 IMPORT SPOTIFY TAPE'
-              ).then((ok) => {
-                if (ok) redirectToSpotifyAuth(clientQuery, getRedirectUri());
-              });
-              return;
+            if (importedCassette.isSpotifyPlaylist && !getStoredToken()) {
+              if (clientQuery) {
+                showPixelConfirm(
+                  `成功收到卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否立即使用分享者的連線設定進行登入？`,
+                  '📥 IMPORT SPOTIFY TAPE'
+                ).then((ok) => {
+                  if (ok) {
+                    redirectToSpotifyAuth(clientQuery, getRedirectUri());
+                  } else {
+                    showPixelConfirm(
+                      `卡帶已成功匯入！\n您也可以在「卡帶工作室」中自訂 Client ID 進行連線。\n是否現在前往設定頁面？`,
+                      '📥 CASSETTE IMPORTED'
+                    ).then((go) => {
+                      if (go) {
+                        setHighlightSpotifyConnect(true);
+                        setPage('settings');
+                      }
+                    });
+                  }
+                });
+              } else {
+                showPixelConfirm(
+                  `成功收到並匯入卡帶：「${importedCassette.title}」！\n\n這張卡帶需要連接 Spotify 才能播放。\n是否現在前往「卡帶工作室」進行連線設定？`,
+                  '📥 CASSETTE IMPORTED'
+                ).then((ok) => {
+                  if (ok) {
+                    setHighlightSpotifyConnect(true);
+                    setPage('settings');
+                  }
+                });
+              }
             } else {
               showPixelAlert(`成功收到並匯入朋友分享的卡帶：「${importedCassette.title}」！`, '📥 CASSETTE IMPORTED');
             }
