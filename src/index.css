@@ -44,7 +44,7 @@ body {
   /* Retro dotted background pattern (with reduced opacity for better text readability) */
   background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
   background-size: 16px 16px;
-  backdrop-filter: blur(20px);
+
 }
 
 
@@ -175,6 +175,7 @@ body {
   background-color: #8b8f9e;
 }
 
+.walkman-btn:active:not(:disabled),
 .walkman-btn.pressed {
   height: 46px;
   margin-top: 10px;
@@ -375,8 +376,8 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
    🎮 RETRO GAMER THEME (Arcade Cabinet & Famicom Style)
    ========================================================================== */
 
-/* Retro Gamer Casing Casing styling override */
-.walkman-casing.theme-retro-gamer .walkman-btn {
+/* Retro Arcade Casing styling override */
+.walkman-casing.theme-retro-arcade .walkman-btn {
   background-color: #ebd4b4; /* Vintage Famicom controller cream */
   box-shadow: 
     inset -4px -4px 0 0 #9c8466,
@@ -384,11 +385,12 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
     0 0 0 3px #000;
 }
 
-.walkman-casing.theme-retro-gamer .walkman-btn:hover {
+.walkman-casing.theme-retro-arcade .walkman-btn:hover {
   background-color: #f6ebd9;
 }
 
-.walkman-casing.theme-retro-gamer .walkman-btn.pressed {
+.walkman-casing.theme-retro-arcade .walkman-btn:active:not(:disabled),
+.walkman-casing.theme-retro-arcade .walkman-btn.pressed {
   background-color: #cbb494;
   box-shadow: 
     inset 4px 4px 0 0 #574630,
@@ -397,7 +399,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
 }
 
 /* Custom Arcade Teal PLAY button */
-.walkman-casing.theme-retro-gamer .btn-play-custom {
+.walkman-casing.theme-retro-arcade .btn-play-custom {
   background-color: #12a4b4 !important;
   box-shadow: 
     inset -4px -4px 0 0 #075c66,
@@ -405,11 +407,12 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
     0 0 0 3px #000 !important;
 }
 
-.walkman-casing.theme-retro-gamer .btn-play-custom:hover {
+.walkman-casing.theme-retro-arcade .btn-play-custom:hover {
   background-color: #1ebcd0 !important;
 }
 
-.walkman-casing.theme-retro-gamer .btn-play-custom.pressed {
+.walkman-casing.theme-retro-arcade .btn-play-custom:active:not(:disabled),
+.walkman-casing.theme-retro-arcade .btn-play-custom.pressed {
   background-color: #0b737e !important;
   box-shadow: 
     inset 4px 4px 0 0 #03363b,
@@ -418,7 +421,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
 }
 
 /* Custom Arcade Red STOP button */
-.walkman-casing.theme-retro-gamer .btn-stop-custom {
+.walkman-casing.theme-retro-arcade .btn-stop-custom {
   background-color: #d84545 !important;
   box-shadow: 
     inset -4px -4px 0 0 #7c1a1a,
@@ -426,11 +429,12 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
     0 0 0 3px #000 !important;
 }
 
-.walkman-casing.theme-retro-gamer .btn-stop-custom:hover {
+.walkman-casing.theme-retro-arcade .btn-stop-custom:hover {
   background-color: #eb5c5c !important;
 }
 
-.walkman-casing.theme-retro-gamer .btn-stop-custom.pressed {
+.walkman-casing.theme-retro-arcade .btn-stop-custom:active:not(:disabled),
+.walkman-casing.theme-retro-arcade .btn-stop-custom.pressed {
   background-color: #9f2b2b !important;
   box-shadow: 
     inset 4px 4px 0 0 #4c0f0f,
@@ -455,6 +459,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
   background-color: #404040;
 }
 
+.walkman-casing.theme-gameboy-yellow .walkman-btn:active:not(:disabled),
 .walkman-casing.theme-gameboy-yellow .walkman-btn.pressed {
   background-color: #202020;
   box-shadow: 
@@ -476,6 +481,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
   background-color: #b81c3c !important;
 }
 
+.walkman-casing.theme-gameboy-yellow .btn-play-custom:active:not(:disabled),
 .walkman-casing.theme-gameboy-yellow .btn-play-custom.pressed {
   background-color: #7a0820 !important;
   box-shadow: 
@@ -496,6 +502,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
   background-color: #b81c3c !important;
 }
 
+.walkman-casing.theme-gameboy-yellow .btn-stop-custom:active:not(:disabled),
 .walkman-casing.theme-gameboy-yellow .btn-stop-custom.pressed {
   background-color: #7a0820 !important;
   box-shadow: 
@@ -522,6 +529,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
   background-color: #ac07eb;
 }
 
+.walkman-casing.theme-cyberpunk .walkman-btn:active:not(:disabled),
 .walkman-casing.theme-cyberpunk .walkman-btn.pressed {
   background-color: #63008c;
   box-shadow: 
@@ -543,6 +551,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
   background-color: #ff47c2 !important;
 }
 
+.walkman-casing.theme-cyberpunk .btn-play-custom:active:not(:disabled),
 .walkman-casing.theme-cyberpunk .btn-play-custom.pressed {
   background-color: #c2007e !important;
   box-shadow: 
@@ -563,6 +572,7 @@ input[type="range"].retro-slider::-webkit-slider-thumb:active {
   background-color: #66f2f7 !important;
 }
 
+.walkman-casing.theme-cyberpunk .btn-stop-custom:active:not(:disabled),
 .walkman-casing.theme-cyberpunk .btn-stop-custom.pressed {
   background-color: #00b8be !important;
   box-shadow: 

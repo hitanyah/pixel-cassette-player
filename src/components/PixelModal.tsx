@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { createPortal } from 'react-dom';
 
 interface PixelModalProps {
   isOpen: boolean;
@@ -17,24 +18,14 @@ export const PixelModal: React.FC<PixelModalProps> = ({
   onConfirm,
   onCancel
 }) => {
-  // Lock body scroll when the modal is open to avoid artifacts/gaps when scrolling behind
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   // Split multi-line messages to support nice line breaks
   const lines = message.split('\n');
 
-  return (
+  return createPortal(
     <div 
+      className="pixel-modal-overlay"
       style={{
         position: 'fixed',
         top: 0,
@@ -45,14 +36,15 @@ export const PixelModal: React.FC<PixelModalProps> = ({
         backdropFilter: 'blur(3px)',
         zIndex: 10000,
         display: 'flex',
-        alignItems: 'center',
         justifyContent: 'center',
+        alignItems: 'flex-start', // Prevent top clipping of content when it overflows
+        overflowY: 'auto', // Allow scroll if modal height exceeds screen height
         padding: '20px',
         animation: 'fadeIn 0.2s ease-out'
       }}
     >
       <div 
-        className="pixel-box-outset"
+        className="pixel-box-outset pixel-modal-box"
         style={{
           width: '100%',
           maxWidth: '400px',
@@ -62,6 +54,7 @@ export const PixelModal: React.FC<PixelModalProps> = ({
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
+          margin: 'auto', // Centering trick with scroll support
           boxShadow: `
             inset -4px -4px 0 0 #1e2027,
             inset 4px 4px 0 0 #6c7283,
@@ -72,7 +65,7 @@ export const PixelModal: React.FC<PixelModalProps> = ({
       >
         {/* Modal Title Bar */}
         <div 
-          className="pixel-box-inset"
+          className="pixel-box-inset pixel-modal-titlebar"
           style={{
             backgroundColor: '#1e2027',
             padding: '8px 12px',
@@ -101,7 +94,7 @@ export const PixelModal: React.FC<PixelModalProps> = ({
 
         {/* Modal Content */}
         <div 
-          className="pixel-box-inset"
+          className="pixel-box-inset pixel-modal-content"
           style={{
             backgroundColor: '#1c1c1f',
             padding: '16px',
@@ -125,7 +118,7 @@ export const PixelModal: React.FC<PixelModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '4px' }}>
+        <div className="pixel-modal-btn-container" style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '4px' }}>
           {type === 'confirm' && onCancel && (
             <button
               className="pixel-btn"
@@ -178,7 +171,36 @@ export const PixelModal: React.FC<PixelModalProps> = ({
           from { transform: scale(0.85); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
         }
+        
+        /* Compact modal sizing for narrow viewports or landscape mobile orientation */
+        @media (max-width: 480px), (max-height: 500px) {
+          .pixel-modal-box {
+            padding: 12px 16px !important;
+            gap: 10px !important;
+            border-width: 3px !important;
+          }
+          .pixel-modal-titlebar {
+            padding: 6px 10px !important;
+          }
+          .pixel-modal-titlebar span {
+            font-size: 10px !important;
+          }
+          .pixel-modal-content {
+            padding: 10px 12px !important;
+            font-size: 12px !important;
+            min-height: 48px !important;
+          }
+          .pixel-modal-btn-container {
+            margin-top: 0px !important;
+            gap: 10px !important;
+          }
+          .pixel-modal-btn-container button {
+            padding: 8px 16px !important;
+            font-size: 9px !important;
+          }
+        }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 };

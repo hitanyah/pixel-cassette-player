@@ -37,7 +37,7 @@
 ### 6. 全站畫素風彈窗系統 (Custom Pixel Modal)
 * **全自訂 8-Bit 彈窗**：全面替換瀏覽器原生的 `alert()` 與 `confirm()`，使用 PICO-8 調色盤按鈕與 8-bit 字型，保持擬真畫素美學。
 * **CRT 濾鏡溢出修復**：透過將彈窗元件放置於 CRT filter 容器外側，避免 CSS `transform` / `perspective` 對 `position: fixed` 的裁切，實現真正的全螢幕模糊遮罩。
-* **頁面滾動鎖定**：彈窗開啟時自動鎖定網頁 body 滾動（`overflow: hidden`），防止使用者下拉滾動條時背景破綻。
+* **彈窗內容自適應滾動**：彈窗遮罩本身支援自適應滾動（`overflow-y: auto`），且彈窗主體搭配 `margin: auto` 居中，防止在矮螢幕（如手機橫放）時彈窗文字被頂部裁切，同時避免了 iOS 上傳統 `overflow: hidden` 造成的頁面跳動。
 
 ### 7. Spotify 播放強健性與引導優化
 * **自動停帶與防競態 (Ref Guard)**：新增 `sideFinishedRef` 狀態守衛，在卡帶 Side A/B 播完時主動攔截並暫停播放器，徹底解決 Spotify SDK 狀態變更事件在雙向同步時的 Race Condition。
@@ -107,7 +107,7 @@ pixel-cassette-player/
 │   │   │   ├── DisplayScreen.tsx     # LCD 與 Canvas 頻譜視覺化元件
 │   │   │   └── Walkman.tsx           # 隨身聽主機與控制按鍵元件
 │   │   ├── Settings/
-│   │   │   └── SettingsPage.tsx      # 自訂卡帶配色與 Spotify 串接後臺
+│   │   │   └── SettingsPage.tsx      # 自訂卡帶配色與 Spotify 串接後台
 │   │   └── PixelModal.tsx            # 畫素風自訂彈窗元件 (Alert / Confirm)
 │   ├── hooks/
 │   │   ├── useAudioPlayer.ts         # 基於 Web Audio API 封裝的播放引擎

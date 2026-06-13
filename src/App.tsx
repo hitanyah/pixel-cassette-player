@@ -18,12 +18,13 @@ function App() {
   const [highlightSpotifyConnect, setHighlightSpotifyConnect] = useState(false);
 
   // Walkman Casing Theme state (persisted in localStorage)
-  const [theme, setTheme] = useState<'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk'>(() => {
+  const [theme, setTheme] = useState<'classic' | 'retro-arcade' | 'gameboy-yellow' | 'cyberpunk'>(() => {
     const stored = localStorage.getItem('walkman_theme');
-    return (stored as 'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk') || 'classic';
+    if (stored === 'retro-gamer') return 'retro-arcade'; // Migrate old theme name
+    return (stored as 'classic' | 'retro-arcade' | 'gameboy-yellow' | 'cyberpunk') || 'classic';
   });
 
-  const handleSetTheme = (newTheme: 'classic' | 'retro-gamer' | 'gameboy-yellow' | 'cyberpunk') => {
+  const handleSetTheme = (newTheme: 'classic' | 'retro-arcade' | 'gameboy-yellow' | 'cyberpunk') => {
     setTheme(newTheme);
     localStorage.setItem('walkman_theme', newTheme);
   };
@@ -392,7 +393,7 @@ function App() {
                 <h1
                   className="font-pixel"
                   style={{
-                    fontSize: '20px',
+                    fontSize: 'clamp(12px, 4vw, 20px)',
                     color: '#ffdf00',
                     textShadow: '3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000',
                     letterSpacing: '1px',
@@ -480,20 +481,20 @@ function App() {
                         CLASSIC BLUE
                       </button>
                       <button
-                        className={`pixel-btn ${theme === 'retro-gamer' ? 'active' : ''}`}
-                        onClick={() => handleSetTheme('retro-gamer')}
+                        className={`pixel-btn ${theme === 'retro-arcade' ? 'active' : ''}`}
+                        onClick={() => handleSetTheme('retro-arcade')}
                         style={{
                           flex: 1,
                           padding: '6px 8px',
                           fontSize: '9px',
-                          backgroundColor: theme === 'retro-gamer' ? '#c23631' : '#32353d',
+                          backgroundColor: theme === 'retro-arcade' ? '#c23631' : '#32353d',
                           color: '#fff',
-                          boxShadow: theme === 'retro-gamer'
+                          boxShadow: theme === 'retro-arcade'
                             ? 'inset 2px 2px 0 0 #000, inset -2px -2px 0 0 #ec7063, 0 0 0 2px #000'
                             : 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #555, 0 0 0 2px #000'
                         }}
                       >
-                        🕹️ RETRO GAMER
+                        🕹️ RETRO ARCADE
                       </button>
                       <button
                         className={`pixel-btn ${theme === 'gameboy-yellow' ? 'active' : ''}`}
@@ -546,13 +547,13 @@ function App() {
                       操作指南 (WALKTHROUGH)
                     </div>
                     1. 點擊卡帶架上的卡帶放入隨身聽。<br />
-                    2. 點擊 <strong>PLAY</strong> 播放，齒輪將轉動並顯示音樂波形。<br />
+                    2. 點擊 <strong>PLAY</strong> 播放，齒輪將轉動並顯示音訊頻譜（Spotify 與跨域音訊將以模擬波形跳動）。<br />
                     3. 可點擊 <strong>NEXT</strong>/<strong>PREV</strong> 切換上一首與下一首。<br />
                     4. A 面播完會自動停止，請點擊黃色按鈕進行 <strong>翻面</strong>。<br />
                     5. 前往「卡帶工作室」可自訂卡帶配色並匯入 Spotify 歌單！
 
                     <div style={{ marginTop: '12px', fontSize: '10px', textAlign: 'right', opacity: 0.5, color: '#a0a0ab' }}>
-                      v1.0.0 | by TanyaH
+                      v{__APP_VERSION__} | by TanyaH
                     </div>
                   </div>
                 </div>

@@ -625,13 +625,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   style={{
                     backgroundColor: '#ff3b30',
                     color: '#fff',
-                    padding: '2px 8px',
+                    padding: '4px 8px',
                     fontSize: '9px',
                     fontWeight: 'bold',
-                    boxShadow: 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #ff8888, 0 0 0 2px #000'
+                    boxShadow: 'inset -2px -2px 0 0 #000, inset 2px 2px 0 0 #ff8888, 0 0 0 2px #000',
+                    display: 'inline-flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '1px',
+                    lineHeight: '1.2'
                   }}
                 >
-                  一鍵清空 (CLEAR ALL)
+                  <span>一鍵清空</span>
+                  <span style={{ fontSize: '7px', opacity: 0.8, fontWeight: 'normal' }}>CLEAR ALL</span>
                 </button>
               )}
             </div>

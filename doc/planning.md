@@ -11,7 +11,7 @@
 
 ## 2. 元件架構設計 (Component Architecture)
 
-專案結構劃分為主控端、核心隨身聽、卡帶架與後臺設定四大核心區塊：
+專案結構劃分為主控端、核心隨身聽、卡帶架與後台設定四大核心區塊：
 
 ```mermaid
 graph TD
@@ -35,7 +35,7 @@ graph TD
 * **`DisplayScreen.tsx`**：畫素液晶顯示螢幕，負責繪製 Canvas 波形與數字時鐘。
 * **`CassetteTape.tsx`**：物理卡帶渲染元件，根據進度以 SVG 齒輪進行旋轉、並增減左右軸磁帶繞線寬度。
 * **`CassetteRack.tsx`**：卡帶收納架，可點選以自動化流程裝載卡帶。
-* **`SettingsPage.tsx`**：卡帶編輯後臺，處理外觀自訂與 Spotify PKCE 授權，並包含引導使用者的懸浮氣泡。
+* **`SettingsPage.tsx`**：卡帶編輯後台，處理外觀自訂與 Spotify PKCE 授權，並包含引導使用者的懸浮氣泡。
 * **`PixelModal.tsx`**：畫素風自訂彈窗，取代瀏覽器內建的 `alert` 與 `confirm`，採用 PICO-8 像素配色並透過 Promise 非同步返回互動結果。
 * **`useAudioPlayer.ts`**：核心音訊 Hook，控制 Audio 物件與 `AudioContext` 頻譜串接。
 
@@ -96,12 +96,12 @@ stateDiagram-v2
    `v2.` 前綴用於辨識新版格式，以利向下相容。
 
 4. **接收解碼 (Decoding)**：
-   當 `App.tsx` 在元件掛載時 (`useEffect`) 偵測到網址包含 `tape` 引數：
+   當 `App.tsx` 在元件掛載時 (`useEffect`) 偵測到網址包含 `tape` 參數：
    - 若以 `v2.` 開頭，使用 `DecompressionStream('gzip')` 非同步解壓
    - 若無前綴，以舊版 `atob` 同步解碼（**完整向下相容**所有舊版分享連結）
 
 5. **自動匯入 (Import & Persist)**：
-   還原後的卡帶會被賦予新的唯一 ID (`shared-{timestamp}`)，加入至本地端的 `localStorage` 卡帶架 (`custom_cassettes`) 中。同時系統會清除網址列的引數以避免重新整理時重複匯入。
+   還原後的卡帶會被賦予新的唯一 ID (`shared-{timestamp}`)，加入至本地端的 `localStorage` 卡帶架 (`custom_cassettes`) 中。同時系統會清除網址列的參數以避免重新整理時重複匯入。
 
 ### 為何不使用短網址服務？
 
@@ -122,9 +122,9 @@ stateDiagram-v2
    - 隨身聽使用了 CRT filter 濾鏡（`filter: contrast(1.15) brightness(1.1) ...`）與 3D 傾斜視角（`transform: perspective(800px) ...`）。
    - 根據 CSS 規範，當父元素帶有 `transform` 或 `filter` 時，子元素的 `position: fixed` 將以該父元素作為定位參照，而非 window，導致滿版遮罩被裁剪至隨身聽區塊內。
    - **解決方案**：將 `<PixelModal />` 提升至 React 最外層 Fragment 渲染，與 CRT 容器平級，實現真正的 100vw/100vh 滿版模糊遮罩。
-3. **視窗捲軸鎖定 (Body Scroll Lock)**：
-   - 在行動端或小螢幕下，彈窗出現時背景仍能滾動，容易造成邊角露出與視覺不一致。
-   - 實作在彈窗 `isOpen` 時，動態將 `document.body.style.overflow = 'hidden'`，關閉時還原，徹底鎖定背景頁面。
+3. **彈窗滾動與視窗適配 (Modal Scroll & Viewport Adaptation)**：
+   - 移除過往在行動端容易造成 iOS Safari 頁面跳動與捲動重置的 `overflow: hidden` 鎖定機制。
+   - 改為將彈窗遮罩本身（`.pixel-modal-overlay`）設為 `position: fixed` 滿版，並開啟 `overflow-y: auto`。搭配彈窗本體使用 `margin: auto` 進行居中，確保當彈窗內容過長（例如在橫向螢幕手機下）時，使用者仍可正常滾動閱讀彈窗內容，而不會發生被頂部裁切的問題。
 
 ### B. Spotify 連線失效與卡帶匯入引導流程
 1. **連線失效自動跳轉**：
